@@ -10,7 +10,7 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=['start', 'help'])
 async def command_start(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Помощь!')
+    await bot.send_message(message.from_user.id, 'Помощь1')
 
 
 @dp.message_handler()
