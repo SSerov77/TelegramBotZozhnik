@@ -1,10 +1,11 @@
+import os
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
-import os
+from config import TOKEN
 
-bot = Bot(token=os.getenv('TOKEN'))
+bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
 
@@ -18,4 +19,4 @@ async def echo_send(message: types.Message):
     await message.answer(message.text)
 
 
-executor.start_polling(dp, skip_updates=True)
+executor.start_polling(dp, skip_updates=False)
