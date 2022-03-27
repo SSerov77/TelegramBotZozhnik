@@ -1,11 +1,11 @@
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
+from config import TOKEN
 import sqlite3
-
 import os
 
-bot = Bot(token=os.getenv('TOKEN'))
+bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 connection = sqlite3.connect('BotZozhnik.db')
 cur = connection.cursor()
