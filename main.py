@@ -23,6 +23,7 @@ help_text = 'Как пользоваться ботом?' \
             '\n🔅Например, когда тебе нужно принять таблетки' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
+
 @dp.message_handler(commands=['start', 'help'])
 async def command_start(message: types.Message):
     if not cur.execute(f'''select chat_id From users
