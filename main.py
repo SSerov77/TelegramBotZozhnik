@@ -23,7 +23,7 @@ help_text = 'Как пользоваться ботом?' \
 @dp.message_handler(commands=['start'])
 async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id,
-                           f'Привет {message.from_user.first_name}, возникнут вопросы напиши \help',
+                           f'Привет {message.from_user.first_name}, если возникнут вопросы напиши \help',
                            reply_markup=kb.mainMenu)
 
 
@@ -32,36 +32,50 @@ async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
 
 
+@dp.message_handler(text=['Назад в главное меню'])
+async def nutrition_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы вернулись в главное меню', reply_markup=kb.mainMenu)
+
+
+@dp.message_handler(text=['Правильное питание'])
+async def main_menu_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Правильное питание', reply_markup=kb.purposeMenu)
+
+
+@dp.message_handler(text=['Назад в "Правильное питание"'])
+async def nutrition_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы вернусь в "Правильное питание"',
+                           reply_markup=kb.purposeMenu)
+
+
+@dp.message_handler(text=['Другое'])
+async def other_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы перешли в "Другое"', reply_markup=kb.otherMenu)
+
+
+@dp.message_handler(text=['Назад в "Другое"'])
+async def back_to_other_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы вернулись в "Другое"', reply_markup=kb.otherMenu)
+
+
+@dp.message_handler(text=['Поменять цель'])
+async def get_purpose_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы решили изменить свою цель', reply_markup=kb.getPurposeMenu)
+
+
+@dp.message_handler(text=['Погода'])
+async def weather_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.weatherMenu)
+
+
+@dp.message_handler(text=['Уведомления'])
+async def back_to_other_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.notifyMenu)
+
+
 @dp.message_handler()
 async def message_send(message: types.Message):
-
-    # Раздел другое
-    if message.text == 'Другое':
-        await bot.send_message(message.from_user.id, 'Вы перешли в "Другое"', reply_markup=kb.otherMenu)
-    elif message.text == 'Назад в главное меню':
-        await bot.send_message(message.from_user.id, 'Вы вернулись в главное меню', reply_markup=kb.mainMenu)
-
-    # Функционал кнопок в разделе Правильное питание
-    elif message.text == 'Правильное питание':
-        await bot.send_message(message.from_user.id, 'Правильное питание', reply_markup=kb.purposeMenu)
-    elif message.text == 'Поменять цель':
-        await bot.send_message(message.from_user.id, 'Вы решили изменить свою цель', reply_markup=kb.getPurposeMenu)
-    elif message.text == 'Назад в "Правильное питание"':
-        await bot.send_message(message.from_user.id, 'Вы вернусь в "Правильное питание"',
-                               reply_markup=kb.purposeMenu)
-
-    elif message.text == 'Поменять цель':
-        await bot.send_message(message.from_user.id, 'Вы решили поменять цель',
-                               reply_markup=kb.getPurposeMenu)
-    # Функционал кнопок разделе Погода
-    elif message.text == 'Погода':
-        await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.weatherMenu)
-    elif message.text == 'Назад в "Другое"':
-        await bot.send_message(message.from_user.id, 'Вы вернулись в "Другое"', reply_markup=kb.otherMenu)
-
-    # Функционал кнопок в разделе Уведомления
-    elif message.text == 'Уведомления':
-        await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.notifyMenu)
+    pass
 
 
 executor.start_polling(dp, skip_updates=False)
