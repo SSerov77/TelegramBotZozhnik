@@ -80,7 +80,7 @@ async def weather_kb(message: types.Message):
 
 @dp.message_handler(text=['Уведомления'])
 async def back_to_other_kb(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.notifyMenu)
+    await bot.send_message(message.from_user.id, 'Вы перешли в "Уведомления"', reply_markup=kb.notifyMenu)
 
 
 @dp.message_handler()
