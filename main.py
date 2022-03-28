@@ -103,7 +103,6 @@ async def quotes(message: types.Message):
     await bot.send_message(message.from_user.id, str(choice(data)))
 
 
-executor.start_polling(dp, skip_updates=False)
 @dp.message_handler(text=['Поменять город'])
 async def weather_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
