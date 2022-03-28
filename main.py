@@ -7,6 +7,7 @@ import os
 
 from config import TOKEN
 from bot_fiels import keyboard_markup as kb
+from random import choice
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -40,6 +41,18 @@ async def command_start(message: types.Message):
 @dp.message_handler(commands=['help'])
 async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
+
+@dp.message_handler(commands=['choicecity'])
+async def command_start(message: types.Message):
+    try:
+        new_city = message.get_args()
+        cur.execute(f"UPDATE users SET city='{new_city}' "
+                    f"WHERE chat_id={message.from_user.id}")
+        connection.commit()
+    except:
+        await bot.send_message(message.from_user.id, 'Некоректный запрос')
+    else:
+        await bot.send_message(message.from_user.id, f'Ваш город был изменён на: {new_city}')
 
 
 @dp.message_handler(text=['Назад в главное меню'])
@@ -90,10 +103,15 @@ async def quotes(message: types.Message):
     await bot.send_message(message.from_user.id, str(choice(data)))
 
 
+executor.start_polling(dp, skip_updates=False)
+@dp.message_handler(text=['Поменять город'])
+async def weather_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
+                           reply_markup=kb.weatherMenu)
+
 @dp.message_handler()
 async def message_send(message: types.Message):
     pass
 
 
-
-executor.start_polling(dp, skip_updates=False)
+executor.start_polling(dp, skip_updates=True)
