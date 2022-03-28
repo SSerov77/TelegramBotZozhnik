@@ -24,7 +24,7 @@ help_text = 'Как пользоваться ботом?' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
 
-@dp.message_handler(commands=['start', 'help'])
+@dp.message_handler(commands=['start'])
 async def command_start(message: types.Message):
     if not cur.execute(f'''select chat_id From users
                         where chat_id = '{message.chat.id}' ''').fetchall():
@@ -83,9 +83,17 @@ async def back_to_other_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы перешли в "Уведомления"', reply_markup=kb.notifyMenu)
 
 
+@dp.message_handler(text='Мотивация')
+async def quotes(message: types.Message):
+    f = open("quotes.txt", 'r', encoding="utf8")
+    data = f.readlines()
+    await bot.send_message(message.from_user.id, str(choice(data)))
+
+
 @dp.message_handler()
 async def message_send(message: types.Message):
     pass
+
 
 
 executor.start_polling(dp, skip_updates=False)
