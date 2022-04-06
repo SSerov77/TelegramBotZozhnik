@@ -8,6 +8,7 @@ import os
 from config import TOKEN
 from bot_fiels import keyboard_markup as kb
 from random import choice
+from bot_fiels.weather import Weather
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -41,6 +42,7 @@ async def command_start(message: types.Message):
 @dp.message_handler(commands=['help'])
 async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
+
 
 @dp.message_handler(commands=['choicecity'])
 async def command_start(message: types.Message):
@@ -81,14 +83,15 @@ async def back_to_other_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы вернулись в "Другое"', reply_markup=kb.otherMenu)
 
 
-@dp.message_handler(text=['Поменять цель'])
-async def get_purpose_kb(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Вы решили изменить свою цель', reply_markup=kb.getPurposeMenu)
-
-
 @dp.message_handler(text=['Погода'])
 async def weather_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.weatherMenu)
+
+
+@dp.message_handler(text=['Ваш город'])
+async def weather_kb(message: types.Message):
+    res = Weather(str(message.chat.id)).result
+    await bot.send_message(message.from_user.id, res, reply_markup=kb.weatherMenu)
 
 
 @dp.message_handler(text=['Уведомления'])
@@ -107,6 +110,7 @@ async def quotes(message: types.Message):
 async def weather_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
                            reply_markup=kb.weatherMenu)
+
 
 @dp.message_handler()
 async def message_send(message: types.Message):

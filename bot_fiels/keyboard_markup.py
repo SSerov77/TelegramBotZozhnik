@@ -44,19 +44,16 @@ btnPurpose = KeyboardButton('Ваша цель')
 btnOtherPurpose = KeyboardButton('Поменять цель')
 
 # создаем кнопки для раздела правильно питание поменять цель
-btnPondus = KeyboardButton('Похудеть')
-btnFat = KeyboardButton('Набрать массу')
-btnSupport = KeyboardButton('Нормальное')
+btnSalad = KeyboardButton('Салаты')
+btnHotter = KeyboardButton('Горячее')
+btnSoups = KeyboardButton('Супы')
+btnFish = KeyboardButton('Рыба')
+btnDrinks = KeyboardButton('Напитки')
 btnBack2 = KeyboardButton('Назад в "Правильное питание"')
 
 # создаем маркап для клавиатуры правильного питания цель
 purposeMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-purposeMenu.row(btnPurpose, btnOtherPurpose, btnBack)
-
-# создаем маркап для клавиатуры правильного питания поменять цель
-getPurposeMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-getPurposeMenu.row(btnPondus, btnFat, btnSupport).row(btnBack2)
-
+purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBack2)
 
 '''Уведомления'''
 
