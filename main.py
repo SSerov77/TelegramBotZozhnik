@@ -91,7 +91,10 @@ async def weather_kb(message: types.Message):
 @dp.message_handler(text=['Ваш город'])
 async def weather_kb(message: types.Message):
     res = Weather(str(message.chat.id)).result
-    await bot.send_message(message.from_user.id, res, reply_markup=kb.weatherMenu)
+    if res:
+        await bot.send_message(message.from_user.id, res, reply_markup=kb.weatherMenu)
+    else:
+        await bot.send_message(message.from_user.id, f'Вы не ввели город', reply_markup=kb.weatherMenu)
 
 
 @dp.message_handler(text=['Уведомления'])

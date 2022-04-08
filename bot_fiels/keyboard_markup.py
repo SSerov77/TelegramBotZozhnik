@@ -49,11 +49,10 @@ btnHotter = KeyboardButton('Горячее')
 btnSoups = KeyboardButton('Супы')
 btnFish = KeyboardButton('Рыба')
 btnDrinks = KeyboardButton('Напитки')
-btnBack2 = KeyboardButton('Назад в "Правильное питание"')
 
 # создаем маркап для клавиатуры правильного питания цель
 purposeMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBack2)
+purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBack)
 
 '''Уведомления'''
 
