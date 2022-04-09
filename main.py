@@ -107,7 +107,9 @@ async def callbacks_next(call: types.CallbackQuery):
 @dp.callback_query_handler(text='confirm')
 async def callbacks_confirm(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
-
+    f = open("exercises.txt", 'r', encoding='utf8')
+    data = f.readlines()
+    await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
     await call.answer()
 
 executor.start_polling(dp, skip_updates=True)
