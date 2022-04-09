@@ -3,6 +3,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from config import TOKEN
 import sqlite3
+from time import sleep
 import os
 from random import choice
 # from bot_fiels import keyboard_markup as kb
@@ -74,10 +75,56 @@ async def workout(message: types.Message):
 
 
 @dp.message_handler(text='Выбрать упражнение')
-async def workout(message: types.Message):
+async def choice_exercise(message: types.Message):
     user_data[message.from_user.id] = 0
     await bot.send_message(message.from_user.id, 'Выберите упражнение:',
                            reply_markup=get_keyboard())
+
+
+@dp.message_handler(text='Случайное упражнение')
+async def random_exercise(message: types.Message):
+    exercise = choice(exercises)
+    f = open("exercises.txt", 'r', encoding='utf8')
+    data = f.readlines()
+    f.close()
+    await bot.send_message(message.from_user.id, f'Упражнение: {exercise}\n{data[exercises.index(exercise)]}')
+
+
+@dp.message_handler(text='Начать тренировку')
+async def workout_start(message: types.Message):
+    btn = types.InlineKeyboardButton(text="ДА!", callback_data="yes")
+    keyboard = types.InlineKeyboardMarkup(row_width=3)
+    keyboard.add(btn)
+    await bot.send_message(message.from_user.id, f'Начинаем?', reply_markup=keyboard)
+
+
+
+@dp.callback_query_handler(text='yes')
+async def yes(call: types.CallbackQuery):
+    for i in range(5, 0, -1):
+        await call.message.edit_text(str(i))
+        sleep(1)
+    f = open("exercises.txt", 'r', encoding='utf8')
+    data = f.readlines()
+    f.close()
+    for i in exercises:
+        await call.message.edit_text(f'Упражнение: {i}\n{data[exercises.index(i)]}')
+        sleep(30)
+    await call.answer()
+
+
+
+@dp.callback_query_handler(text='back')
+async def countdown(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'Выберите упражнение:', reply_markup=get_keyboard(user_index - 1))
+        user_data[call.from_user.id] = user_index - 1
+    except IndexError:
+        await call.message.edit_text(f'Выберите упражнение:', reply_markup=get_keyboard(11))
+        user_data[call.from_user.id] = 11
+    await call.answer()
+
 
 
 @dp.callback_query_handler(text='back')
@@ -109,6 +156,7 @@ async def callbacks_confirm(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     f = open("exercises.txt", 'r', encoding='utf8')
     data = f.readlines()
+    f.close()
     await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
     await call.answer()
 
