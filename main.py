@@ -34,9 +34,9 @@ def get_keyboard():
 async def command_start(message: types.Message):
     if not cur.execute(f'''select chat_id From users
                         where chat_id = '{message.chat.id}' ''').fetchall():
-        cur.execute("INSERT INTO users(chat_id, name, weight, city, mailing)"
-                    "VALUES(?, ?, ?, ?, ?)",
-                    (message.chat.id, str(message.from_user.first_name), None, None, 'False'))
+        cur.execute("INSERT INTO users(chat_id, name, weight, city, mailing, completion_notification)"
+                    "VALUES(?, ?, ?, ?, ?, ?)",
+                    (message.chat.id, str(message.from_user.first_name), None, None, 'False', 'True'))
         connection.commit()
 
 
@@ -128,19 +128,18 @@ async def workout_start(message: types.Message):
     await bot.send_message(message.from_user.id, f'Начинаем?', reply_markup=keyboard)
 
 
-
 @dp.callback_query_handler(text='notification_completion_on')
 async def notification_completion_on(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о погоде были включены')
-    cur.execute(f"UPDATE users SET mailing='True' "
+    await call.message.edit_text('Уведомления о завершении работы бота были включены')
+    cur.execute(f"UPDATE users SET completion_notification='True' "
                 f"WHERE chat_id={call.from_user.id}")
     connection.commit()
 
 
 @dp.callback_query_handler(text='notification_completion_off')
 async def notification_completion_off(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о погоде были включены')
-    cur.execute(f"UPDATE users SET mailing='True' "
+    await call.message.edit_text('Уведомления о завершении работы бота были выключены')
+    cur.execute(f"UPDATE users SET completion_notification='False' "
                 f"WHERE chat_id={call.from_user.id}")
     connection.commit()
 
@@ -183,12 +182,13 @@ async def countdown(call: types.CallbackQuery):
                                         text='Бот был принудительно остановлен!'
                                              ' Данное оповещение пришло всем пользователям.',
                                         show_alert=True)
-        data = cur.execute(f'''SELECT chat_id From users''').fetchall()
+        data = cur.execute(f'''SELECT chat_id From users
+                                WHERE completion_notification=True''').fetchall()
         for i in data:
             await bot.send_message(*i, f'Бот был остановлен, извените за неудобства😔')
         exit(0)
     else:
-        await call.message.edit_text('У вас нет прав алминистратора!')
+        await call.message.edit_text('У вас нет прав администратора!')
 
 
 @dp.callback_query_handler(text='back')
