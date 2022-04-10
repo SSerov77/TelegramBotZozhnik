@@ -33,6 +33,7 @@ help_text = 'Как пользоваться ботом?' \
             '\n🔅Например, когда тебе нужно принять таблетки' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
+
 def get_keyboard():
     buttons = [
         types.InlineKeyboardButton(text="<<", callback_data="back"),
@@ -42,7 +43,6 @@ def get_keyboard():
     keyboard = types.InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
     return keyboard
-
 
 
 @dp.message_handler(commands=['start'])
@@ -230,6 +230,7 @@ async def notification_weather_off(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='yes')
 async def yes(call: types.CallbackQuery):
+    keyboard = types.ReplyKeyboardRemove()
     for i in range(5, 0, -1):
         await call.message.edit_text(str(i))
         sleep(1)
@@ -250,11 +251,12 @@ async def countdown(call: types.CallbackQuery):
                                         text='Бот был принудительно остановлен!'
                                              ' Данное оповещение пришло всем пользователям.',
                                         show_alert=True)
-        data = cur.execute(f'''SELECT chat_id From users
-                                WHERE completion_notification=True''').fetchall()
+        data = cur.execute(f"SELECT chat_id FROM users WHERE completion_notification='True'"
+                           ).fetchall()
         for i in data:
             await bot.send_message(*i, f'Бот был остановлен, извените за неудобства😔')
         exit(0)
+
     else:
         await call.message.edit_text('У вас нет прав администратора!')
 
@@ -292,10 +294,10 @@ async def callbacks_confirm(call: types.CallbackQuery):
     await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
     await call.answer()
 
+
 @dp.message_handler()
 async def message_send(message: types.Message):
     pass
-
 
 
 executor.start_polling(dp, skip_updates=True)
