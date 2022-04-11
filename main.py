@@ -12,6 +12,7 @@ import asyncio
 import aioschedule
 
 user_data = {}
+admin_user_data = []
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
              'Приседания', 'Бег, колени вверх',
              'Выпады', 'Отжимания с поворотом', 'Боковая планка', 'Обратные отжимания от стула', 'Планка']
@@ -31,6 +32,11 @@ def get_keyboard():
     keyboard = types.InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
     return keyboard
+
+
+def update_data():
+    global admin_user_data
+    admin_user_data = cur.execute(f"SELECT chat_id, name, city, mailing, completion_notification FROM users").fetchall()
 
 
 @dp.message_handler(commands=['start'])
@@ -66,8 +72,12 @@ async def command_start(message: types.Message):
 
 @dp.message_handler(commands=['settings'])
 async def command_start(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Вы перешли в настройки',
-                           reply_markup=kb.settingsMenu)
+    if message.from_user.id in admins_id:
+        await bot.send_message(message.from_user.id, 'Вы перешли в настройки',
+                               reply_markup=kb.settingsMenuAdmin)
+    else:
+        await bot.send_message(message.from_user.id, 'Вы перешли в настройки',
+                               reply_markup=kb.settingsMenu)
 
 
 @dp.message_handler(text='Мотивация')
@@ -81,6 +91,17 @@ async def quotes(message: types.Message):
 # async def weather_kb(message: types.Message):
 #     await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
 #                            reply_markup=kb.weatherMenu)
+
+
+@dp.message_handler(text='Уведомления пользователей')
+async def notification_weather(message: types.Message):
+    if message.from_user.id in admins_id:
+        update_data()
+        user_data[message.from_user.id] = 0
+        await bot.send_message(message.from_user.id, f'Выберите пользователя:', reply_markup=kb.editingUsers)
+    else:
+        await bot.send_message(message.from_user.id, 'У вас нет прав администратора!')
+
 
 @dp.message_handler(text='Уведомления погоды')
 async def notification_weather(message: types.Message):
@@ -178,7 +199,7 @@ async def yes(call: types.CallbackQuery):
 
 
 @dp.callback_query_handler(text='stop')
-async def countdown(call: types.CallbackQuery):
+async def stop(call: types.CallbackQuery):
     if call.from_user.id in admins_id:
         await call.message.edit_text('Бот остановлен!')
         await bot.answer_callback_query(call.id,
@@ -192,6 +213,62 @@ async def countdown(call: types.CallbackQuery):
         exit(0)
     else:
         await call.message.edit_text('У вас нет прав администратора!')
+
+
+@dp.callback_query_handler(text='back_user')
+async def back_user(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'ID: {admin_user_data[user_index - 1][0]}\n'
+                                     f'Имя: {admin_user_data[user_index - 1][1]}\n'
+                                     f'Город: {admin_user_data[user_index - 1][2]}\n'
+                                     f'Уведомления о погоде: {admin_user_data[user_index - 1][3]}\n'
+                                     f'Уведомление о принудительной остановки бота: {admin_user_data[user_index - 1][4]}',
+                                     reply_markup=kb.editingUsers)
+        user_data[call.from_user.id] = user_index - 1
+    except IndexError:
+        await call.message.edit_text(f'ID: {admin_user_data[-1][0]}\n'
+                                     f'Имя: {admin_user_data[-1][1]}\n'
+                                     f'Город: {admin_user_data[-1][2]}\n'
+                                     f'Уведомления о погоде: {admin_user_data[-1][3]}\n'
+                                     f'Уведомление о принудительной остановки бота: {admin_user_data[-1][4]}'
+                                     f'', reply_markup=kb.editingUsers)
+        user_data[call.from_user.id] = -1
+    await call.answer()
+
+
+@dp.callback_query_handler(text='next_user')
+async def back_user(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'ID: {admin_user_data[user_index + 1][0]}\n'
+                                     f'Имя: {admin_user_data[user_index + 1][1]}\n'
+                                     f'Город: {admin_user_data[user_index + 1][2]}\n'
+                                     f'Уведомления о погоде: {admin_user_data[user_index + 1][3]}\n'
+                                     f'Уведомление о принудительной остановки бота: {admin_user_data[user_index + 1][4]}',
+                                     reply_markup=kb.editingUsers)
+        user_data[call.from_user.id] = user_index + 1
+    except IndexError:
+        await call.message.edit_text(f'ID: {admin_user_data[0][0]}\n'
+                                     f'Имя: {admin_user_data[0][1]}\n'
+                                     f'Город: {admin_user_data[0][2]}\n'
+                                     f'Уведомления о погоде: {admin_user_data[0][3]}\n'
+                                     f'Уведомление о принудительной остановки бота: {admin_user_data[0][4]}',
+                                     reply_markup=kb.editingUsers)
+        user_data[call.from_user.id] = 0
+    await call.answer()
+
+
+@dp.callback_query_handler(text='confirm_user')
+async def confirm_user(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
+                                 f'Имя: {admin_user_data[user_index][1]}\n'
+                                 f'Город: {admin_user_data[user_index][2]}\n'
+                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
+                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
+                                 reply_markup=kb.choiceEdit)
+    await call.answer()
 
 
 @dp.callback_query_handler(text='back')
@@ -224,7 +301,7 @@ async def callbacks_confirm(call: types.CallbackQuery):
     f = open("exercises.txt", 'r', encoding='utf8')
     data = f.readlines()
     f.close()
-    await call.message.edit_text(f'Упражнение {exercises[user_index]}\n{data[user_index]}')
+    await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')
     await call.answer()
 
 
@@ -247,7 +324,6 @@ async def scheduler():
             await asyncio.sleep(60)
     except TypeError:
         pass
-
 
 
 async def on_startup(dp):
