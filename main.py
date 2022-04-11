@@ -8,11 +8,14 @@ import os
 from random import choice
 from bot_fiels import keyboard_markup as kb
 from aiogram.types import ReplyKeyboardMarkup
+import asyncio
+import aioschedule
 
 user_data = {}
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
              'Приседания', 'Бег, колени вверх',
              'Выпады', 'Отжимания с поворотом', 'Боковая планка', 'Обратные отжимания от стула', 'Планка']
+admins_id = [1212339097, 1300485082]
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 connection = sqlite3.connect('BotZozhnik.db')
@@ -176,14 +179,14 @@ async def yes(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='stop')
 async def countdown(call: types.CallbackQuery):
-    if call.from_user.id == 1212339097 or call.from_user.id == 1300485082:
+    if call.from_user.id in admins_id:
         await call.message.edit_text('Бот остановлен!')
         await bot.answer_callback_query(call.id,
                                         text='Бот был принудительно остановлен!'
                                              ' Данное оповещение пришло всем пользователям.',
                                         show_alert=True)
-        data = cur.execute(f'''SELECT chat_id From users
-                                WHERE completion_notification=True''').fetchall()
+        data = cur.execute(f"SELECT chat_id FROM users "
+                           f"WHERE completion_notification='True'").fetchall()
         for i in data:
             await bot.send_message(*i, f'Бот был остановлен, извените за неудобства😔')
         exit(0)
@@ -221,8 +224,35 @@ async def callbacks_confirm(call: types.CallbackQuery):
     f = open("exercises.txt", 'r', encoding='utf8')
     data = f.readlines()
     f.close()
-    await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
+    await call.message.edit_text(f'Упражнение {exercises[user_index]}\n{data[user_index]}')
     await call.answer()
 
 
-executor.start_polling(dp, skip_updates=True)
+@dp.message_handler()
+async def morning_weather():
+    try:
+        data = cur.execute(f"SELECT chat_id FROM users "
+                           f"WHERE mailing='True'").fetchall()
+        for i in data:
+            await bot.send_message(*i, text="Здесь должна быть погода")
+    except TypeError:
+        pass
+
+
+async def scheduler():
+    try:
+        aioschedule.every().day.at("8:00").do(morning_weather)
+        while True:
+            await aioschedule.run_pending()
+            await asyncio.sleep(60)
+    except TypeError:
+        pass
+
+
+
+async def on_startup(dp):
+    asyncio.create_task(scheduler())
+
+
+if __name__ == '__main__':
+    executor.start_polling(dp, on_startup=on_startup)
