@@ -139,7 +139,16 @@ async def back_to_other_kb(message: types.Message):
 async def quotes(message: types.Message):
     f = open("quotes.txt", 'r', encoding="utf8")
     data = f.readlines()
-    await bot.send_message(message.from_user.id, str(choice(data)))
+    await bot.send_message(message.from_user.id, str(choice(data)), reply_markup=kb.otherMenu)
+    f.close()
+
+
+@dp.message_handler(text='Интересные факты')
+async def quotes(message: types.Message):
+    f = open("facts.txt", 'r', encoding="utf8")
+    data = f.readlines()
+    await bot.send_message(message.from_user.id, str(choice(data)), reply_markup=kb.otherMenu)
+    f.close()
 
 
 @dp.message_handler(text=['Поменять город'])
