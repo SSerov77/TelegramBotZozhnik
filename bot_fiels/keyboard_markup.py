@@ -28,7 +28,7 @@ otherMenu.row(btnWeather, btnFacts).row(btnMotivation, btnBack)
 '''Погода'''
 
 # создаем кнопки для раздела погода
-btnCity = KeyboardButton('Ваш город')
+btnCity = KeyboardButton('Узнать погоду')
 btnOtherCity = KeyboardButton('Поменять город')
 btnBack1 = KeyboardButton('Назад в "Другое"')
 

@@ -41,11 +41,11 @@ class Weather:
             temp = int(data['main']['temp']) - 273  # температура
             humidity = data['main']['humidity']  # влажность
             pressure = data['main']['pressure']  # давление
-            result = str(f'Погода в {user_city}:\n'
+            result = str(f'Погода в городе {user_city}:\n'
                          f'Сегодня: {main_weather}\n'  # выводимый результат
                          f'Температура: {temp}C\n'
                          f'Влажность: {humidity}%\n'
-                         f'Давление: {pressure} мм.рт.ст'
+                         f'Давление: {int(pressure) * 0.75} мм.рт.ст'
                          )
             self.result = result
         except Exception:

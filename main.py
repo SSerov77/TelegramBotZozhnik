@@ -121,7 +121,7 @@ async def weather_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.weatherMenu)
 
 
-@dp.message_handler(text=['Ваш город'])
+@dp.message_handler(text=['Узнать погоду'])
 async def weather_kb(message: types.Message):
     res = Weather(str(message.chat.id)).result
     if res:
@@ -142,10 +142,11 @@ async def quotes(message: types.Message):
     await bot.send_message(message.from_user.id, str(choice(data)))
 
 
-# @dp.message_handler(text=['Поменять город'])
-# async def weather_kb(message: types.Message):
-#     await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
-#                            reply_markup=kb.weatherMenu)
+@dp.message_handler(text=['Поменять город'])
+async def weather_kb(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
+                           reply_markup=kb.weatherMenu)
+
 
 @dp.message_handler(text='Уведомления погоды')
 async def notification_weather(message: types.Message):
