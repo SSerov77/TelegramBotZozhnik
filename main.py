@@ -82,13 +82,6 @@ async def command_start(message: types.Message):
                            reply_markup=kb.mainMenu)
 
 
-@dp.message_handler(commands=['start'])
-async def command_start(message: types.Message):
-    await bot.send_message(message.from_user.id,
-                           f'Привет {message.from_user.first_name}, если возникнут вопросы напиши \help',
-                           reply_markup=kb.mainMenu)
-
-
 @dp.message_handler(commands=['help'])
 async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
