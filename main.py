@@ -5,6 +5,7 @@ from aiogram.utils import executor
 
 from config import TOKEN
 from bot_fiels import keyboard_markup as kb
+from bot_fiels.food import Food
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -20,7 +21,7 @@ help_text = 'Как пользоваться ботом?' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
 user_data = {}
-menu = ['Мясо', 'Рыба', 'Молоко', 'Печенье', 'Шоколад']
+menu = []
 
 
 def get_keyboard():
@@ -37,8 +38,10 @@ def get_keyboard():
     return keyboard
 
 
-@dp.message_handler(text='test')
-async def choice_exercise(message: types.Message):
+@dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
+async def other_kb(message: types.Message):
+    global menu
+    menu = Food(str(message.text)).result
     user_data[message.from_user.id] = 0
     await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
                            reply_markup=get_keyboard())
@@ -46,18 +49,20 @@ async def choice_exercise(message: types.Message):
 
 @dp.callback_query_handler(text='backk')
 async def countdown(call: types.CallbackQuery):
+    global menu
     user_index = user_data[call.from_user.id]
     try:
         await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard())
         user_data[call.from_user.id] = user_index - 1
     except IndexError:
-        await call.message.edit_text(f'Блюдо: {menu[4]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = 4
+        await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard())
+        user_data[call.from_user.id] = len(menu)
     await call.answer()
 
 
 @dp.callback_query_handler(text='finish')
 async def callbacks_confirm(call: types.CallbackQuery):
+    global menu
     user_index = user_data[call.from_user.id]
     await call.message.edit_text(f'{menu[user_index]}')
     await call.answer()
@@ -65,6 +70,7 @@ async def callbacks_confirm(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='upp')
 async def countdown(call: types.CallbackQuery):
+    global menu
     user_index = user_data[call.from_user.id]
     try:
         await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard())
@@ -111,11 +117,6 @@ async def other_kb(message: types.Message):
 @dp.message_handler(text=['Назад в "Другое"'])
 async def back_to_other_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы вернулись в "Другое"', reply_markup=kb.otherMenu)
-
-
-@dp.message_handler(text=['Поменять цель'])
-async def get_purpose_kb(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Вы решили изменить свою цель', reply_markup=kb.getPurposeMenu)
 
 
 @dp.message_handler(text=['Погода'])
