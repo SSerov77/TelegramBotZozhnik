@@ -5,7 +5,10 @@ from aiogram.utils import executor
 
 from config import TOKEN
 from bot_fiels import keyboard_markup as kb
-from bot_fiels.food import Food
+from bot_fiels.food import Food, Recepts
+
+from data import db_session
+from data.users import User
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -22,17 +25,33 @@ help_text = 'Как пользоваться ботом?' \
 
 user_data = {}
 menu = []
+dish = ''
+total_id_users = []
+user = User()
+
+
+def main(id_user, name):
+    db_sess = db_session.create_session()
+    print(1)
+    for i in db_sess.query(User).all():
+        i = i.id_user
+        if i not in total_id_users:
+            total_id_users.append(i)
+        if id_user not in total_id_users:
+            print(total_id_users)
+            user.name = name
+            user.id_user = id_user
+            db_sess.add(user)
+            total_id_users.append(i)
+            db_sess.commit()
 
 
 def get_keyboard():
-    # Генерация клавиатуры.
     buttons = [
         types.InlineKeyboardButton(text="<", callback_data="backk"),
         types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
         types.InlineKeyboardButton(text=">", callback_data="upp")
     ]
-    # Благодаря row_width=2, в первом ряду будет две кнопки, а оставшаяся одна
-    # уйдёт на следующую строку
     keyboard = types.InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
     return keyboard
@@ -41,7 +60,9 @@ def get_keyboard():
 @dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
 async def other_kb(message: types.Message):
     global menu
+    global dish
     menu = Food(str(message.text)).result
+    dish = str(message.text)
     user_data[message.from_user.id] = 0
     await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
                            reply_markup=get_keyboard())
@@ -63,8 +84,11 @@ async def countdown(call: types.CallbackQuery):
 @dp.callback_query_handler(text='finish')
 async def callbacks_confirm(call: types.CallbackQuery):
     global menu
+    global dish
     user_index = user_data[call.from_user.id]
-    await call.message.edit_text(f'{menu[user_index]}')
+    result = Recepts(int(user_index), dish).result_dish
+    await call.message.edit_text(f'{menu[user_index]}: '
+                                 f'\n{result}')
     await call.answer()
 
 
@@ -86,6 +110,7 @@ async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f'Привет {message.from_user.first_name}, если возникнут вопросы напиши \help',
                            reply_markup=kb.mainMenu)
+    main(message.from_user.id, message.from_user.first_name)
 
 
 @dp.message_handler(commands=['help'])
