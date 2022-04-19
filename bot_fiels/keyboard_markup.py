@@ -36,7 +36,6 @@ btnBack1 = KeyboardButton('Назад в "Другое"')
 weatherMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 weatherMenu.row(btnCity, btnOtherCity, btnBack1)
 
-
 '''Правильное питание'''
 
 # создаем кнопки для раздела правильно питание цель

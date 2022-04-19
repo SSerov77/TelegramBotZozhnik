@@ -33,6 +33,87 @@ help_text = 'Как пользоваться ботом?' \
             '\n🔅Например, когда тебе нужно принять таблетки' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
+user_data = {}
+menu = []
+dish = ''
+total_id_users = []
+user = User()
+
+
+def main(id_user, name):
+    db_sess = db_session.create_session()
+    print(1)
+    for i in db_sess.query(User).all():
+        i = i.id_user
+        if i not in total_id_users:
+            total_id_users.append(i)
+        if id_user not in total_id_users:
+            print(total_id_users)
+            user.name = name
+            user.id_user = id_user
+            db_sess.add(user)
+            total_id_users.append(i)
+            db_sess.commit()
+
+
+def get_keyboard():
+    buttons = [
+        types.InlineKeyboardButton(text="<", callback_data="backk"),
+        types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
+        types.InlineKeyboardButton(text=">", callback_data="upp")
+    ]
+    keyboard = types.InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    return keyboard
+
+
+@dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
+async def other_kb(message: types.Message):
+    global menu
+    global dish
+    menu = Food(str(message.text)).result
+    dish = str(message.text)
+    user_data[message.from_user.id] = 0
+    await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
+                           reply_markup=get_keyboard())
+
+
+@dp.callback_query_handler(text='backk')
+async def countdown(call: types.CallbackQuery):
+    global menu
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard())
+        user_data[call.from_user.id] = user_index - 1
+    except IndexError:
+        await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard())
+        user_data[call.from_user.id] = len(menu)
+    await call.answer()
+
+
+@dp.callback_query_handler(text='finish')
+async def callbacks_confirm(call: types.CallbackQuery):
+    global menu
+    global dish
+    user_index = user_data[call.from_user.id]
+    result = Recepts(int(user_index), dish).result_dish
+    await call.message.edit_text(f'{menu[user_index]}: '
+                                 f'\n{result}')
+    await call.answer()
+
+
+@dp.callback_query_handler(text='upp')
+async def countdown(call: types.CallbackQuery):
+    global menu
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard())
+        user_data[call.from_user.id] = user_index + 1
+    except IndexError:
+        await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard())
+        user_data[call.from_user.id] = 0
+    await call.answer()
+
 
 def get_keyboard():
     buttons = [
@@ -56,38 +137,12 @@ async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f'Привет {message.from_user.first_name}, если возникнут вопросы напиши \help',
                            reply_markup=kb.mainMenu)
+    main(message.from_user.id, message.from_user.first_name)
 
 
 @dp.message_handler(commands=['help'])
 async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
-
-
-@dp.message_handler(commands=['choicecity'])
-async def command_start(message: types.Message):
-    try:
-        new_city = message.get_args()
-        cur.execute(f"UPDATE users SET city='{new_city}' "
-                    f"WHERE chat_id={message.from_user.id}")
-        connection.commit()
-    except:
-        await bot.send_message(message.from_user.id, 'Некоректный запрос')
-    else:
-        await bot.send_message(message.from_user.id, f'Ваш город был изменён на: {new_city}')
-
-
-@dp.message_handler(commands=['stop'])
-async def command_start(message: types.Message):
-    btn = types.InlineKeyboardButton(text="ДА!", callback_data="stop")
-    keyboard = types.InlineKeyboardMarkup(row_width=1)
-    keyboard.add(btn)
-    await bot.send_message(message.from_user.id, f'Вы действительно хотите остановить бота?', reply_markup=keyboard)
-
-
-@dp.message_handler(commands=['settings'])
-async def command_start(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Вы перешли в настройки',
-                           reply_markup=kb.settingsMenu)
 
 
 @dp.message_handler(text=['Назад в главное меню'])
@@ -310,4 +365,4 @@ async def message_send(message: types.Message):
     pass
 
 
-executor.start_polling(dp, skip_updates=True)
+executor.start_polling(dp, skip_updates=False)
