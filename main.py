@@ -8,11 +8,16 @@ import os
 from random import choice
 from bot_fiels import keyboard_markup as kb
 from aiogram.types import ReplyKeyboardMarkup
+from bot_fiels.keyboard_markup import get_keyboard1, get_keyboard2
 
 from config import TOKEN
 from bot_fiels import keyboard_markup as kb
 from random import choice
 from bot_fiels.weather import Weather
+from data import db_session
+
+from data.users import User
+
 
 user_data = {}
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
@@ -56,84 +61,55 @@ def main(id_user, name):
             db_sess.commit()
 
 
-def get_keyboard():
-    buttons = [
-        types.InlineKeyboardButton(text="<", callback_data="backk"),
-        types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
-        types.InlineKeyboardButton(text=">", callback_data="upp")
-    ]
-    keyboard = types.InlineKeyboardMarkup(row_width=3)
-    keyboard.add(*buttons)
-    return keyboard
+# @dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
+# async def other_kb(message: types.Message):
+#     global menu
+#     global dish
+#     menu = Food(str(message.text)).result
+#     dish = str(message.text)
+#     user_data[message.from_user.id] = 0
+#     await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
+#                            reply_markup=get_keyboard1())
 
 
-@dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
-async def other_kb(message: types.Message):
-    global menu
-    global dish
-    menu = Food(str(message.text)).result
-    dish = str(message.text)
-    user_data[message.from_user.id] = 0
-    await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
-                           reply_markup=get_keyboard())
+# @dp.callback_query_handler(text='backk')
+# async def countdown(call: types.CallbackQuery):
+#     global menu
+#     user_index = user_data[call.from_user.id]
+#     try:
+#         await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard1())
+#         user_data[call.from_user.id] = user_index - 1
+#     except IndexError:
+#         await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard1())
+#         user_data[call.from_user.id] = len(menu)
+#     await call.answer()
 
 
-@dp.callback_query_handler(text='backk')
-async def countdown(call: types.CallbackQuery):
-    global menu
-    user_index = user_data[call.from_user.id]
-    try:
-        await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = user_index - 1
-    except IndexError:
-        await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = len(menu)
-    await call.answer()
+# @dp.callback_query_handler(text='finish')
+# async def callbacks_confirm(call: types.CallbackQuery):
+#     global menu
+#     global dish
+#     user_index = user_data[call.from_user.id]
+#     await call.message.edit_text(f'{menu[user_index]}: '
+#                                  f'\n{result}')
+#     await call.answer()
 
 
-@dp.callback_query_handler(text='finish')
-async def callbacks_confirm(call: types.CallbackQuery):
-    global menu
-    global dish
-    user_index = user_data[call.from_user.id]
-    result = Recepts(int(user_index), dish).result_dish
-    await call.message.edit_text(f'{menu[user_index]}: '
-                                 f'\n{result}')
-    await call.answer()
-
-
-@dp.callback_query_handler(text='upp')
-async def countdown(call: types.CallbackQuery):
-    global menu
-    user_index = user_data[call.from_user.id]
-    try:
-        await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = user_index + 1
-    except IndexError:
-        await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = 0
-    await call.answer()
-
-
-def get_keyboard():
-    buttons = [
-        types.InlineKeyboardButton(text="<<", callback_data="back"),
-        types.InlineKeyboardButton(text="Подтвердить", callback_data="confirm"),
-        types.InlineKeyboardButton(text=">>", callback_data="next")
-    ]
-    keyboard = types.InlineKeyboardMarkup(row_width=3)
-    keyboard.add(*buttons)
-    return keyboard
+# @dp.callback_query_handler(text='upp')
+# async def countdown(call: types.CallbackQuery):
+#     global menu
+#     user_index = user_data[call.from_user.id]
+#     try:
+#         await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard1())
+#         user_data[call.from_user.id] = user_index + 1
+#     except IndexError:
+#         await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard1())
+#         user_data[call.from_user.id] = 0
+#     await call.answer()
 
 
 @dp.message_handler(commands=['start'])
 async def command_start(message: types.Message):
-    if not cur.execute(f'''select chat_id From users
-                        where chat_id = '{message.chat.id}' ''').fetchall():
-        cur.execute("INSERT INTO users(chat_id, name, weight, city, mailing, completion_notification)"
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    (message.chat.id, str(message.from_user.first_name), None, None, 'False', 'True'))
-        connection.commit()
     await bot.send_message(message.from_user.id,
                            f'Привет {message.from_user.first_name}, если возникнут вопросы напиши \help',
                            reply_markup=kb.mainMenu)
@@ -241,7 +217,7 @@ async def workout(message: types.Message):
 async def choice_exercise(message: types.Message):
     user_data[message.from_user.id] = 0
     await bot.send_message(message.from_user.id, f'Упражнение: {exercises[user_data[message.from_user.id]]}',
-                           reply_markup=get_keyboard())
+                           reply_markup=get_keyboard2())
 
 
 @dp.message_handler(text='Случайное упражнение')
@@ -261,36 +237,36 @@ async def workout_start(message: types.Message):
     await bot.send_message(message.from_user.id, f'Начинаем?', reply_markup=keyboard)
 
 
-@dp.callback_query_handler(text='notification_completion_on')
-async def notification_completion_on(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о завершении работы бота были включены')
-    cur.execute(f"UPDATE users SET completion_notification='True' "
-                f"WHERE chat_id={call.from_user.id}")
-    connection.commit()
+# @dp.callback_query_handler(text='notification_completion_on')
+# async def notification_completion_on(call: types.CallbackQuery):
+#     await call.message.edit_text('Уведомления о завершении работы бота были включены')
+#     cur.execute(f"UPDATE users SET completion_notification='True' "
+#                 f"WHERE chat_id={call.from_user.id}")
+#     connection.commit()
 
 
-@dp.callback_query_handler(text='notification_completion_off')
-async def notification_completion_off(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о завершении работы бота были выключены')
-    cur.execute(f"UPDATE users SET completion_notification='False' "
-                f"WHERE chat_id={call.from_user.id}")
-    connection.commit()
+# @dp.callback_query_handler(text='notification_completion_off')
+# async def notification_completion_off(call: types.CallbackQuery):
+#     await call.message.edit_text('Уведомления о завершении работы бота были выключены')
+#     cur.execute(f"UPDATE users SET completion_notification='False' "
+#                 f"WHERE chat_id={call.from_user.id}")
+#     connection.commit()
 
 
-@dp.callback_query_handler(text='notification_weather_on')
-async def notification_weather_on(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о погоде были включены')
-    cur.execute(f"UPDATE users SET mailing='True' "
-                f"WHERE chat_id={call.from_user.id}")
-    connection.commit()
+# @dp.callback_query_handler(text='notification_weather_on')
+# async def notification_weather_on(call: types.CallbackQuery):
+#     await call.message.edit_text('Уведомления о погоде были включены')
+#     cur.execute(f"UPDATE users SET mailing='True' "
+#                 f"WHERE chat_id={call.from_user.id}")
+#     connection.commit()
 
 
-@dp.callback_query_handler(text='notification_weather_off')
-async def notification_weather_off(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о погоде были выключены')
-    cur.execute(f"UPDATE users SET mailing='False' "
-                f"WHERE chat_id={call.from_user.id}")
-    connection.commit()
+# @dp.callback_query_handler(text='notification_weather_off')
+# async def notification_weather_off(call: types.CallbackQuery):
+#     await call.message.edit_text('Уведомления о погоде были выключены')
+#     cur.execute(f"UPDATE users SET mailing='False' "
+#                 f"WHERE chat_id={call.from_user.id}")
+#     connection.commit()
 
 
 @dp.callback_query_handler(text='yes')
@@ -326,38 +302,38 @@ async def countdown(call: types.CallbackQuery):
         await call.message.edit_text('У вас нет прав администратора!')
 
 
-@dp.callback_query_handler(text='back')
-async def countdown(call: types.CallbackQuery):
-    user_index = user_data[call.from_user.id]
-    try:
-        await call.message.edit_text(f'Упражнение: {exercises[user_index - 1]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = user_index - 1
-    except IndexError:
-        await call.message.edit_text(f'Упражнение: {exercises[11]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = 11
-    await call.answer()
+# @dp.callback_query_handler(text='back')
+# async def countdown(call: types.CallbackQuery):
+#     user_index = user_data[call.from_user.id]
+#     try:
+#         await call.message.edit_text(f'Упражнение: {exercises[user_index - 1]}', reply_markup=get_keyboard2())
+#         user_data[call.from_user.id] = user_index - 1
+#     except IndexError:
+#         await call.message.edit_text(f'Упражнение: {exercises[11]}', reply_markup=get_keyboard2())
+#         user_data[call.from_user.id] = 11
+#     await call.answer()
+#
+#
+# @dp.callback_query_handler(text='next')
+# async def callbacks_next(call: types.CallbackQuery):
+#     user_index = user_data[call.from_user.id]
+#     try:
+#         await call.message.edit_text(f'Упражнение: {exercises[user_index + 1]}', reply_markup=get_keyboard2())
+#         user_data[call.from_user.id] = user_index + 1
+#     except IndexError:
+#         await call.message.edit_text(f'Упражнение: {exercises[0]}', reply_markup=get_keyboard2())
+#         user_data[call.from_user.id] = 0
+#     await call.answer()
 
 
-@dp.callback_query_handler(text='next')
-async def callbacks_next(call: types.CallbackQuery):
-    user_index = user_data[call.from_user.id]
-    try:
-        await call.message.edit_text(f'Упражнение: {exercises[user_index + 1]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = user_index + 1
-    except IndexError:
-        await call.message.edit_text(f'Упражнение: {exercises[0]}', reply_markup=get_keyboard())
-        user_data[call.from_user.id] = 0
-    await call.answer()
-
-
-@dp.callback_query_handler(text='confirm')
-async def callbacks_confirm(call: types.CallbackQuery):
-    user_index = user_data[call.from_user.id]
-    f = open("exercises.txt", 'r', encoding='utf8')
-    data = f.readlines()
-    f.close()
-    await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
-    await call.answer()
+# @dp.callback_query_handler(text='confirm')
+# async def callbacks_confirm(call: types.CallbackQuery):
+#     user_index = user_data[call.from_user.id]
+#     f = open("exercises.txt", 'r', encoding='utf8')
+#     data = f.readlines()
+#     f.close()
+#     await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
+#     await call.answer()
 
 
 @dp.message_handler()

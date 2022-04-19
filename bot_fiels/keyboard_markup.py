@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram import types
 
 '''Основное меню'''
 
@@ -63,7 +64,6 @@ btnDelete = KeyboardButton('Удалить')
 notifyMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 notifyMenu.row(btnAdd, btnDelete, btnBack)
 
-
 '''Настройки'''
 
 # создаем кнопки для раздале настройки
@@ -89,3 +89,25 @@ btnBack = KeyboardButton('Назад в "Другое"')
 exerciseMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 exerciseMenu.row(btnStart, btnRandomExercise)
 exerciseMenu.row(btnChoiceExercise, btnBack)
+
+
+def get_keyboard1():
+    buttons = [
+        types.InlineKeyboardButton(text="<<", callback_data="backk"),
+        types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
+        types.InlineKeyboardButton(text=">>", callback_data="upp")
+    ]
+    keyboard = types.InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    return keyboard
+
+
+def get_keyboard2():
+    buttons = [
+        types.InlineKeyboardButton(text="<<", callback_data="back"),
+        types.InlineKeyboardButton(text="Подтвердить", callback_data="confirm"),
+        types.InlineKeyboardButton(text=">>", callback_data="next")
+    ]
+    keyboard = types.InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    return keyboard
