@@ -1,13 +1,9 @@
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
-from config import TOKEN
-import sqlite3
 from time import sleep
-import os
-from random import choice
-from bot_fiels import keyboard_markup as kb
-from aiogram.types import ReplyKeyboardMarkup
+
+from bot_fiels.food import Food
 from bot_fiels.keyboard_markup import get_keyboard1, get_keyboard2
 
 from config import TOKEN
@@ -15,9 +11,10 @@ from bot_fiels import keyboard_markup as kb
 from random import choice
 from bot_fiels.weather import Weather
 from data import db_session
+from data.db_session import global_init
 
 from data.users import User
-
+# from send_photo import Photo
 
 user_data = {}
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
@@ -25,8 +22,6 @@ exercises = ['Прыжки', 'Приседание у стены', 'Отжима
              'Выпады', 'Отжимания с поворотом', 'Боковая планка', 'Обратные отжимания от стула', 'Планка']
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
-connection = sqlite3.connect('BotZozhnik.db')
-cur = connection.cursor()
 
 help_text = 'Как пользоваться ботом?' \
             '\n❗Чтобы вызвать клавиатуру основного меню, введи команду \start' \
@@ -41,71 +36,69 @@ help_text = 'Как пользоваться ботом?' \
 user_data = {}
 menu = []
 dish = ''
-total_id_users = []
-user = User()
+
+global_init("db/database.db")
 
 
-def main(id_user, name):
+def main(chat_id, name):
+    user = User()
     db_sess = db_session.create_session()
-    print(1)
-    for i in db_sess.query(User).all():
-        i = i.id_user
-        if i not in total_id_users:
-            total_id_users.append(i)
-        if id_user not in total_id_users:
-            print(total_id_users)
-            user.name = name
-            user.id_user = id_user
-            db_sess.add(user)
-            total_id_users.append(i)
-            db_sess.commit()
+    res = db_sess.query(User).filter(User.chat_id == chat_id).all()
+    print(res.chat_id)
+    if not res:
+        user.name = name
+        user.chat_id = chat_id
+        user.completion_notification = 'True'
+        user.mailing = 'True'
+        db_sess.add(user)
+        db_sess.commit()
 
 
-# @dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
-# async def other_kb(message: types.Message):
-#     global menu
-#     global dish
-#     menu = Food(str(message.text)).result
-#     dish = str(message.text)
-#     user_data[message.from_user.id] = 0
-#     await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
-#                            reply_markup=get_keyboard1())
+@dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
+async def other_kb(message: types.Message):
+    global menu
+    global dish
+    menu = Food(str(message.text)).result
+    dish = str(message.text)
+    user_data[message.from_user.id] = 0
+    await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
+                           reply_markup=get_keyboard1())
 
 
-# @dp.callback_query_handler(text='backk')
-# async def countdown(call: types.CallbackQuery):
-#     global menu
-#     user_index = user_data[call.from_user.id]
-#     try:
-#         await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard1())
-#         user_data[call.from_user.id] = user_index - 1
-#     except IndexError:
-#         await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard1())
-#         user_data[call.from_user.id] = len(menu)
-#     await call.answer()
+@dp.callback_query_handler(text='backk')
+async def countdown(call: types.CallbackQuery):
+    global menu
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard1())
+        user_data[call.from_user.id] = user_index - 1
+    except IndexError:
+        await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard1())
+        user_data[call.from_user.id] = len(menu)
+    await call.answer()
 
 
-# @dp.callback_query_handler(text='finish')
-# async def callbacks_confirm(call: types.CallbackQuery):
-#     global menu
-#     global dish
-#     user_index = user_data[call.from_user.id]
-#     await call.message.edit_text(f'{menu[user_index]}: '
-#                                  f'\n{result}')
-#     await call.answer()
+@dp.callback_query_handler(text='finish')
+async def callbacks_confirm(call: types.CallbackQuery):
+    global menu
+    global dish
+    user_index = user_data[call.from_user.id]
+    result = Photo(int(user_index) + 1)
+    await bot.send_photo(result)
+    await call.answer()
 
 
-# @dp.callback_query_handler(text='upp')
-# async def countdown(call: types.CallbackQuery):
-#     global menu
-#     user_index = user_data[call.from_user.id]
-#     try:
-#         await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard1())
-#         user_data[call.from_user.id] = user_index + 1
-#     except IndexError:
-#         await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard1())
-#         user_data[call.from_user.id] = 0
-#     await call.answer()
+@dp.callback_query_handler(text='upp')
+async def countdown(call: types.CallbackQuery):
+    global menu
+    user_index = user_data[call.from_user.id]
+    try:
+        await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard1())
+        user_data[call.from_user.id] = user_index + 1
+    except IndexError:
+        await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard1())
+        user_data[call.from_user.id] = 0
+    await call.answer()
 
 
 @dp.message_handler(commands=['start'])
@@ -118,7 +111,10 @@ async def command_start(message: types.Message):
 
 @dp.message_handler(commands=['help'])
 async def command_start(message: types.Message):
+    global menu
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
+    # result = Photo(1).result_photo
+    # await bot.send_photo(result)
 
 
 @dp.message_handler(text=['Назад в главное меню'])
@@ -284,22 +280,22 @@ async def yes(call: types.CallbackQuery):
     await call.answer()
 
 
-@dp.callback_query_handler(text='stop')
-async def countdown(call: types.CallbackQuery):
-    if call.from_user.id == 1212339097 or call.from_user.id == 1300485082:
-        await call.message.edit_text('Бот остановлен!')
-        await bot.answer_callback_query(call.id,
-                                        text='Бот был принудительно остановлен!'
-                                             ' Данное оповещение пришло всем пользователям.',
-                                        show_alert=True)
-        data = cur.execute(f"SELECT chat_id FROM users WHERE completion_notification='True'"
-                           ).fetchall()
-        for i in data:
-            await bot.send_message(*i, f'Бот был остановлен, извените за неудобства😔')
-        exit(0)
-
-    else:
-        await call.message.edit_text('У вас нет прав администратора!')
+# @dp.callback_query_handler(text='stop')
+# async def countdown(call: types.CallbackQuery):
+#     if call.from_user.id == 1212339097 or call.from_user.id == 1300485082:
+#         await call.message.edit_text('Бот остановлен!')
+#         await bot.answer_callback_query(call.id,
+#                                         text='Бот был принудительно остановлен!'
+#                                              ' Данное оповещение пришло всем пользователям.',
+#                                         show_alert=True)
+#         data = cur.execute(f"SELECT chat_id FROM users WHERE completion_notification='True'"
+#                            ).fetchall()
+#         for i in data:
+#             await bot.send_message(*i, f'Бот был остановлен, извените за неудобства😔')
+#         exit(0)
+#
+#     else:
+#         await call.message.edit_text('У вас нет прав администратора!')
 
 
 # @dp.callback_query_handler(text='back')
