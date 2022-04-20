@@ -14,5 +14,5 @@ class User(SqlAlchemyBase):
     completion_notification = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     def __repr__(self):
-        return "<User('%s','%s', '%s', '%s', '%s')>" % (
+        return "<User('%s','%s', '%s', '%s', '%s', '%s')>" % (
             self.id, self.chat_id, self.name, self.city, self.mailing, self.completion_notification)

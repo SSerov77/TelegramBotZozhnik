@@ -12,27 +12,15 @@ from random import choice
 from bot_fiels.weather import Weather
 from data import db_session
 from data.db_session import global_init
-from data.facts import Fact
+from data.other_data import facts, quots, help_text, exercises
 
 from data.users import User
 from send_photo import Photo
 
 user_data = {}
-exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
-             'Приседания', 'Бег, колени вверх',
-             'Выпады', 'Отжимания с поворотом', 'Боковая планка', 'Обратные отжимания от стула', 'Планка']
+
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
-
-help_text = 'Как пользоваться ботом?' \
-            '\n❗Чтобы вызвать клавиатуру основного меню, введи команду \start' \
-            '\nПосле этого выбери один из нужных тебе инструментов' \
-            '\n✅Раздел "Ваше питание" подскажет тебе нужный рацион чтобы похудеть, набрать массу или поддерживать её' \
-            '\n✅Раздел "Тренировки" подскажет тебе быстрые и удобные физические упражнения на каждый день' \
-            '\n✅В разделе "Мои достижения" ты можешь записывать свои успехи по улучшению себя' \
-            '\n✅В разделе "Уведомления" ты можешь записать что-то и бот тебе это пришлёт несколько раз ,чтобы ты не забыл об этом' \
-            '\n🔅Например, когда тебе нужно принять таблетки' \
-            '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
 user_data_dish = {}
 menu = []
@@ -94,10 +82,10 @@ async def countdown(call: types.CallbackQuery):
     user_index = user_data_dish[call.from_user.id]
     try:
         await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard1())
-        user_data[call.from_user.id] = user_index + 1
+        user_data_dish[call.from_user.id] = user_index + 1
     except IndexError:
         await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard1())
-        user_data[call.from_user.id] = 0
+        user_data_dish[call.from_user.id] = 0
     await call.answer()
 
 
@@ -163,16 +151,11 @@ async def back_to_other_kb(message: types.Message):
 
 @dp.message_handler(text='Мотивация')
 async def quotes(message: types.Message):
-    quotes = []
-    await bot.send_message(message.from_user.id, str(choice(data)), reply_markup=kb.otherMenu)
+    await bot.send_message(message.from_user.id, str(choice(quots)), reply_markup=kb.otherMenu)
 
 
 @dp.message_handler(text='Интересные факты')
 async def quotes(message: types.Message):
-    facts = []
-    res = db_sess.query(Fact)
-    for i in res:
-        facts.append(i.text)
     await bot.send_message(message.from_user.id, str(choice(facts)), reply_markup=kb.otherMenu)
 
 

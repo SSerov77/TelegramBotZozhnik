@@ -1,9 +1,13 @@
-import requests
-import sqlite3
-from config import WEATHER_TOKEN  # API погоды
+from pprint import pprint
 
-connection = sqlite3.connect('BotZozhnik.db')  # подключение БД
-cur = connection.cursor()
+import requests
+from config import WEATHER_TOKEN  # API погоды
+from data import db_session
+from data.db_session import global_init
+from data.users import User
+
+global_init("db/database.db")
+db_sess = db_session.create_session()
 
 ''' Класс с функцией погоды'''
 
@@ -19,10 +23,12 @@ class Weather:
 
     def weather(self):
         try:
-            city = cur.execute(f'''select city From users                                               
-                                    where chat_id = '{self.chat_id}' ''').fetchall()  # Получаем город пользователя из БД
+            result = db_sess.query(User).filter(
+                User.chat_id == self.chat_id).first()  # Получаем город пользователя из БД
+
+            result = str(result.city)
             r = requests.get(
-                f"http://api.openweathermap.org/geo/1.0/direct?q={city}&appid={WEATHER_TOKEN}"
+                f"http://api.openweathermap.org/geo/1.0/direct?q={result}&appid={WEATHER_TOKEN}"
                 # Переводим город в координаты
             )
 
@@ -36,7 +42,7 @@ class Weather:
             )
 
             data = res.json()
-            user_city = city[0][0]  # город
+            user_city = result  # город
             main_weather = slv[data['weather'][0]['main']]  # оcновная погода
             temp = int(data['main']['temp']) - 273  # температура
             humidity = data['main']['humidity']  # влажность
@@ -48,6 +54,7 @@ class Weather:
                          f'Давление: {int(pressure) * 0.75} мм.рт.ст'
                          )
             self.result = result
+
         except Exception:
-            if city:
-                self.result = f'Ваш город "{city[0][0]}" не найден, но там наверное тепло)'
+            if res:
+                self.result = f'Ваш город "{result}" не найден, но там наверное тепло)'

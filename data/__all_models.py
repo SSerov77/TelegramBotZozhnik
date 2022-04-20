@@ -1,3 +1,3 @@
 from . import users
 from . import dishes
-from . import facts
+from . import other_tables
