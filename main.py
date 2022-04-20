@@ -12,9 +12,10 @@ from random import choice
 from bot_fiels.weather import Weather
 from data import db_session
 from data.db_session import global_init
+from data.facts import Fact
 
 from data.users import User
-# from send_photo import Photo
+from send_photo import Photo
 
 user_data = {}
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
@@ -33,18 +34,17 @@ help_text = 'Как пользоваться ботом?' \
             '\n🔅Например, когда тебе нужно принять таблетки' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
-user_data = {}
+user_data_dish = {}
 menu = []
 dish = ''
 
 global_init("db/database.db")
+db_sess = db_session.create_session()
 
 
 def main(chat_id, name):
     user = User()
-    db_sess = db_session.create_session()
     res = db_sess.query(User).filter(User.chat_id == chat_id).all()
-    print(res.chat_id)
     if not res:
         user.name = name
         user.chat_id = chat_id
@@ -60,21 +60,21 @@ async def other_kb(message: types.Message):
     global dish
     menu = Food(str(message.text)).result
     dish = str(message.text)
-    user_data[message.from_user.id] = 0
-    await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data[message.from_user.id]]}',
+    user_data_dish[message.from_user.id] = 0
+    await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data_dish[message.from_user.id]]}',
                            reply_markup=get_keyboard1())
 
 
 @dp.callback_query_handler(text='backk')
 async def countdown(call: types.CallbackQuery):
     global menu
-    user_index = user_data[call.from_user.id]
+    user_index = user_data_dish[call.from_user.id]
     try:
         await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard1())
-        user_data[call.from_user.id] = user_index - 1
+        user_data_dish[call.from_user.id] = user_index - 1
     except IndexError:
         await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard1())
-        user_data[call.from_user.id] = len(menu)
+        user_data_dish[call.from_user.id] = len(menu)
     await call.answer()
 
 
@@ -82,16 +82,16 @@ async def countdown(call: types.CallbackQuery):
 async def callbacks_confirm(call: types.CallbackQuery):
     global menu
     global dish
-    user_index = user_data[call.from_user.id]
-    result = Photo(int(user_index) + 1)
-    await bot.send_photo(result)
+    user_index = user_data_dish[call.from_user.id]
+    result = Photo(int(user_index) + 1).photo
+    await call.message.edit_text(f'Блюдо: {result}', reply_markup=get_keyboard1())
     await call.answer()
 
 
 @dp.callback_query_handler(text='upp')
 async def countdown(call: types.CallbackQuery):
     global menu
-    user_index = user_data[call.from_user.id]
+    user_index = user_data_dish[call.from_user.id]
     try:
         await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard1())
         user_data[call.from_user.id] = user_index + 1
@@ -113,8 +113,7 @@ async def command_start(message: types.Message):
 async def command_start(message: types.Message):
     global menu
     await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
-    # result = Photo(1).result_photo
-    # await bot.send_photo(result)
+    await bot.send_photo(message.from_user.id, Photo(1).photo)
 
 
 @dp.message_handler(text=['Назад в главное меню'])
@@ -164,18 +163,17 @@ async def back_to_other_kb(message: types.Message):
 
 @dp.message_handler(text='Мотивация')
 async def quotes(message: types.Message):
-    f = open("quotes.txt", 'r', encoding="utf8")
-    data = f.readlines()
+    quotes = []
     await bot.send_message(message.from_user.id, str(choice(data)), reply_markup=kb.otherMenu)
-    f.close()
 
 
 @dp.message_handler(text='Интересные факты')
 async def quotes(message: types.Message):
-    f = open("facts.txt", 'r', encoding="utf8")
-    data = f.readlines()
-    await bot.send_message(message.from_user.id, str(choice(data)), reply_markup=kb.otherMenu)
-    f.close()
+    facts = []
+    res = db_sess.query(Fact)
+    for i in res:
+        facts.append(i.text)
+    await bot.send_message(message.from_user.id, str(choice(facts)), reply_markup=kb.otherMenu)
 
 
 @dp.message_handler(text=['Поменять город'])
@@ -330,11 +328,6 @@ async def yes(call: types.CallbackQuery):
 #     f.close()
 #     await call.message.edit_text(f'Упражнение "{exercises[user_index]}"\n{data[user_index]}')
 #     await call.answer()
-
-
-@dp.message_handler()
-async def message_send(message: types.Message):
-    pass
 
 
 executor.start_polling(dp, skip_updates=False)

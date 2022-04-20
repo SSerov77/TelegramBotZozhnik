@@ -7,9 +7,9 @@ cur = connection.cursor()
 
 ''' Класс с функцией погоды'''
 
-
 slv = {'Clouds': 'Облачно', 'Rain': 'Идёт дождь', 'Clear': 'Ясно',
        'Snow': 'Идёт снег', 'Mist': 'Туман'}
+
 
 class Weather:
     def __init__(self, chat_id):
