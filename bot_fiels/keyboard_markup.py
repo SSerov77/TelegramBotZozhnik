@@ -91,18 +91,18 @@ exerciseMenu.row(btnStart, btnRandomExercise)
 exerciseMenu.row(btnChoiceExercise, btnBack)
 
 
-def get_keyboard1():
+def get_keyboard_food():
     buttons = [
-        types.InlineKeyboardButton(text="<<", callback_data="backk"),
+        types.InlineKeyboardButton(text="<<", callback_data="back"),
         types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
-        types.InlineKeyboardButton(text=">>", callback_data="upp")
+        types.InlineKeyboardButton(text=">>", callback_data="up")
     ]
     keyboard = types.InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
     return keyboard
 
 
-def get_keyboard2():
+def get_keyboard_training():
     buttons = [
         types.InlineKeyboardButton(text="<<", callback_data="back"),
         types.InlineKeyboardButton(text="Подтвердить", callback_data="confirm"),
