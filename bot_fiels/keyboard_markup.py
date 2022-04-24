@@ -102,7 +102,7 @@ exerciseMenu.row(btnChoiceExercise, btnBack)
 
 def get_keyboard_food():
     buttons = [
-        types.InlineKeyboardButton(text="<<", callback_data="back"),
+        types.InlineKeyboardButton(text="<<", callback_data="down"),
         types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
         types.InlineKeyboardButton(text=">>", callback_data="up")
     ]
@@ -120,6 +120,7 @@ def get_keyboard_training():
     keyboard = types.InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
     return keyboard
+
 
 '''Редактирование пользователей'''
 
