@@ -47,9 +47,27 @@ editingUsers.add(btnBackUser, btnConfirmUser, btnNextUser)
 '''Выбор изменения'''
 
 btnEditWeather = types.InlineKeyboardButton(text="Погода", callback_data="pass")
-btnEditBot = types.InlineKeyboardButton(text="Отключение бота", callback_data="pass")
+btnEditBot = types.InlineKeyboardButton(text="Отключение бота", callback_data="disabling_bot")
 btnEditStatus = types.InlineKeyboardButton(text="Сделать администратором", callback_data="pass")
-btnBack = types.InlineKeyboardButton(text="Назад", callback_data="pass")
+btnBack = types.InlineKeyboardButton(text="Назад", callback_data="back_choice_user")
 choiceEdit = types.InlineKeyboardMarkup(row_width=2)
 choiceEdit.add(btnEditWeather, btnEditBot)
 choiceEdit.add(btnEditStatus, btnBack)
+
+'''Вклюить/выключить уведомления бота'''
+
+btnChoiceOnOffDisablingBot = types.InlineKeyboardButton(text="Вкл/Выкл", callback_data="on_off_disabling_bot")
+on_off_disabling_bot = types.InlineKeyboardMarkup(row_width=1)
+on_off_disabling_bot.add(btnChoiceOnOffDisablingBot)
+
+'''Вклюить/выключить уведомления погоды'''
+
+btnChoiceOnOffWeather = types.InlineKeyboardButton(text="Вкл/Выкл", callback_data="on_off_weather")
+on_off_weather = types.InlineKeyboardMarkup(row_width=1)
+on_off_weather.add(btnChoiceOnOffWeather)
+
+'''Вклюить/выключить права администратора'''
+
+btnChoiceOnOffAdmin = types.InlineKeyboardButton(text="Вкл/Выкл", callback_data="on_off_admin")
+on_off_admin = types.InlineKeyboardMarkup(row_width=1)
+on_off_admin.add(btnChoiceOnOffAdmin)

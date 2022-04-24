@@ -16,6 +16,7 @@ admin_user_data = []
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
              'Приседания', 'Бег, колени вверх',
              'Выпады', 'Отжимания с поворотом', 'Боковая планка', 'Обратные отжимания от стула', 'Планка']
+
 admins_id = [1212339097, 1300485082]
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -215,6 +216,54 @@ async def stop(call: types.CallbackQuery):
         await call.message.edit_text('У вас нет прав администратора!')
 
 
+@dp.callback_query_handler(text='back_choice_user')
+async def back_choice_user(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
+                                 f'Имя: {admin_user_data[user_index][1]}\n'
+                                 f'Город: {admin_user_data[user_index][2]}\n'
+                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
+                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
+                                 reply_markup=kb.editingUsers)
+    await call.answer()
+
+
+@dp.callback_query_handler(text='disabling_bot')
+async def disabling_bot(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
+                                 f'Имя: {admin_user_data[user_index][1]}\n'
+                                 f'Город: {admin_user_data[user_index][2]}\n'
+                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
+                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
+                                 reply_markup=kb.on_off_disabling_bot)
+    await call.answer()
+
+
+@dp.callback_query_handler(text='disabling_bot')
+async def admin(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
+                                 f'Имя: {admin_user_data[user_index][1]}\n'
+                                 f'Город: {admin_user_data[user_index][2]}\n'
+                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
+                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
+                                 reply_markup=kb.on_off_admin)
+    await call.answer()
+
+
+@dp.callback_query_handler(text='weather')
+async def weather(call: types.CallbackQuery):
+    user_index = user_data[call.from_user.id]
+    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
+                                 f'Имя: {admin_user_data[user_index][1]}\n'
+                                 f'Город: {admin_user_data[user_index][2]}\n'
+                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
+                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
+                                 reply_markup=kb.on_off_weather)
+    await call.answer()
+
+
 @dp.callback_query_handler(text='back_user')
 async def back_user(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
@@ -238,7 +287,7 @@ async def back_user(call: types.CallbackQuery):
 
 
 @dp.callback_query_handler(text='next_user')
-async def back_user(call: types.CallbackQuery):
+async def next_user(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     try:
         await call.message.edit_text(f'ID: {admin_user_data[user_index + 1][0]}\n'
@@ -272,7 +321,7 @@ async def confirm_user(call: types.CallbackQuery):
 
 
 @dp.callback_query_handler(text='back')
-async def countdown(call: types.CallbackQuery):
+async def back(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     try:
         await call.message.edit_text(f'Упражнение: {exercises[user_index - 1]}', reply_markup=get_keyboard())
@@ -296,13 +345,28 @@ async def callbacks_next(call: types.CallbackQuery):
 
 
 @dp.callback_query_handler(text='confirm')
-async def callbacks_confirm(call: types.CallbackQuery):
+async def confirm(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     f = open("exercises.txt", 'r', encoding='utf8')
     data = f.readlines()
     f.close()
     await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')
     await call.answer()
+
+# ф-ция реализованна в ветке master
+@dp.callback_query_handler(text='on_off_disabling_bot')
+async def on_off_disabling_bot(call: types.CallbackQuery):
+    pass
+
+
+@dp.callback_query_handler(text='on_off_weather')
+async def on_off_weather(call: types.CallbackQuery):
+    pass
+
+
+@dp.callback_query_handler(text='on_off_admin')
+async def on_off_admin(call: types.CallbackQuery):
+    pass
 
 
 @dp.message_handler()
@@ -311,6 +375,7 @@ async def morning_weather():
         data = cur.execute(f"SELECT chat_id FROM users "
                            f"WHERE mailing='True'").fetchall()
         for i in data:
+            # Погода реализованна в ветке master
             await bot.send_message(*i, text="Здесь должна быть погода")
     except TypeError:
         pass
