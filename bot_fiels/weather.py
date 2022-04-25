@@ -1,7 +1,5 @@
-from pprint import pprint
-
 import requests
-from config import WEATHER_TOKEN  # API погоды
+from data.config import WEATHER_TOKEN  # API погоды
 from data import db_session
 from data.db_session import global_init
 from data.users_table import User

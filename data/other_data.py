@@ -1,18 +1,24 @@
 from data import db_session
 from data.db_session import global_init
 from data.other_tables import Fact, Quot
+from data.training_table import Training
 
 global_init("db/database.db")
 db_sess = db_session.create_session()
 
 facts = []
-res = db_sess.query(Fact)
-for i in res:
+data = db_sess.query(Fact)
+for i in data:
     facts.append(i.text)
 
+exer = []
+data = db_sess.query(Training)
+for i in data:
+    exer.append(i.text)
+
 quots = []
-res = db_sess.query(Quot)
-for i in res:
+data = db_sess.query(Quot)
+for i in data:
     quots.append(i.text)
 
 help_text = 'Как пользоваться ботом?' \

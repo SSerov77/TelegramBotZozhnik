@@ -1,11 +1,11 @@
-from aiogram import Bot, types
-from config import TOKEN
+from aiogram import Bot
+from data.config import TOKEN
 from data import db_session
 from data.db_session import global_init
 from data.dishes_table import Dish
 
 bot = Bot(token=TOKEN)
-global_init("db/database.db")
+global_init("../db/database.db")
 
 
 class Photo:
