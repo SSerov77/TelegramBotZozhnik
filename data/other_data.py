@@ -1,7 +1,7 @@
 from data import db_session
 from data.db_session import global_init
-from data.other_tables import Fact, Quot
-from data.training_table import Training
+from data_tables.other_tables import Fact, Quot
+from data_tables.training_table import Training
 
 global_init("db/database.db")
 db_sess = db_session.create_session()

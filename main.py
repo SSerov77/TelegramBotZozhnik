@@ -13,7 +13,7 @@ from data import db_session
 from data.db_session import global_init
 from data.other_data import facts, quots, help_text, exercises, exer
 
-from data.users_table import User
+from data_tables.users_table import User
 from bot_fiels.send_photo import Photo
 
 import asyncio

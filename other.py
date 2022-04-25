@@ -4,8 +4,8 @@
 #
 from data import db_session
 from data.db_session import global_init
-from data.dishes_table import Dish
-from data.training_table import Training
+from data_tables.dishes_table import Dish
+from data_tables.training_table import Training
 
 
 def convert_to_binary_data(filename):
