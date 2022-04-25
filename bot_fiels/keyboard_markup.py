@@ -50,6 +50,18 @@ btnSoups = KeyboardButton('Супы')
 btnFish = KeyboardButton('Рыба')
 btnDrinks = KeyboardButton('Напитки')
 
+
+def get_keyboard_food():
+    buttons = [
+        types.InlineKeyboardButton(text="<<", callback_data="down"),
+        types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
+        types.InlineKeyboardButton(text=">>", callback_data="up")
+    ]
+    keyboard = types.InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    return keyboard
+
+
 # создаем маркап для клавиатуры правильного питания цель
 purposeMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBack)
@@ -98,17 +110,6 @@ btnBack = KeyboardButton('Назад в "Другое"')
 exerciseMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 exerciseMenu.row(btnStart, btnRandomExercise)
 exerciseMenu.row(btnChoiceExercise, btnBack)
-
-
-def get_keyboard_food():
-    buttons = [
-        types.InlineKeyboardButton(text="<<", callback_data="down"),
-        types.InlineKeyboardButton(text="Подтвердить", callback_data="finish"),
-        types.InlineKeyboardButton(text=">>", callback_data="up")
-    ]
-    keyboard = types.InlineKeyboardMarkup(row_width=3)
-    keyboard.add(*buttons)
-    return keyboard
 
 
 def get_keyboard_training():

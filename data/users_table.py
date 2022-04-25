@@ -12,6 +12,7 @@ class User(SqlAlchemyBase):
     city = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     mailing = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     completion_notification = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    admin = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     def __repr__(self):
         return "<User('%s','%s', '%s', '%s', '%s', '%s')>" % (

@@ -1,3 +1,3 @@
-from . import users
-from . import dishes
+from . import users_table
+from . import dishes_table
 from . import other_tables

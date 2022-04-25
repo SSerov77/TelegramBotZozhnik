@@ -4,7 +4,7 @@ import requests
 from config import WEATHER_TOKEN  # API погоды
 from data import db_session
 from data.db_session import global_init
-from data.users import User
+from data.users_table import User
 
 global_init("db/database.db")
 db_sess = db_session.create_session()
