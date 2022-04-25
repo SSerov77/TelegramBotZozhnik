@@ -68,13 +68,14 @@ purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBa
 
 '''Уведомления'''
 
-# создаем кнопки для раздале уведомления
-btnAdd = KeyboardButton('Добавить')
-btnDelete = KeyboardButton('Удалить')
-
 # создаем маркап для уведомления
 notifyMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-notifyMenu.row(btnAdd, btnDelete, btnBack)
+notifyMenu.row(btnBack)
+
+btnDelete = types.InlineKeyboardButton(text="Удалить уведомление", callback_data="delete_reminder")
+btnAdd = types.InlineKeyboardButton(text="Добавить уведомление", callback_data="add_reminder")
+reminderMenu = types.InlineKeyboardMarkup(row_width=1)
+reminderMenu.add(btnAdd, btnDelete)
 
 '''Настройки'''
 

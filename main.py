@@ -26,7 +26,7 @@ dp = Dispatcher(bot)
 
 user_data_dish = {}
 menu = []
-
+time_reminder = {}
 admin_user_data = []
 
 global_init("db/database.db")
@@ -270,12 +270,21 @@ async def quotes(message: types.Message):
     await bot.send_message(message.from_user.id, str(choice(facts)), reply_markup=kb.otherMenu)
 
 
-'''Уведомления пользователей'''
+'''Напоминания'''
 
 
 @dp.message_handler(text=['Уведомления'])
 async def back_to_other_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы перешли в "Уведомления"', reply_markup=kb.notifyMenu)
+    await bot.send_message(message.from_user.id, 'Ваши уведомления: ', reply_markup=kb.reminderMenu)
+
+
+@dp.callback_query_handler(text='add_reminder')
+async def add_reminder(call: types.CallbackQuery):
+    await call.message.edit_text('Напишите, что и в какое время Вам напомнить.\nФормат: <<час:мин>> <<Напоминание>>')
+
+
+'''Уведомления пользователей'''
 
 
 @dp.message_handler(text='Уведомление остановки бота')
@@ -489,7 +498,14 @@ async def on_off_disabling_bot(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='on_off_weather')
 async def on_off_weather(call: types.CallbackQuery):
-    pass
+    user_index = user_data[call.from_user.id]
+    id = admin_user_data[user_index][0]
+    res = db_sess.query(User).filter(User.chat_id == id).first()
+    if res.mailing == 'True':
+        res.mailing = 'False'
+    else:
+        res.mailing = 'True'
+    db_sess.commit()
 
 
 @dp.callback_query_handler(text='on_off_admin')
@@ -498,8 +514,14 @@ async def on_off_admin(call: types.CallbackQuery):
 
 
 @dp.message_handler()
-async def echo_message(msg: types.Message):
-    pass
+async def error_message(message: types.Message):
+    if ':' in message.text[0:4] and ' ' in message.text[3:5]:
+        time, np = message.text.split()
+        try:
+            time_reminder[time][chat_id] = np
+        except:
+            time_reminder[time] = {chat_id: np}
+    await bot.send_message(message.from_user.id, 'Я Вас не понимаю.', reply_markup=kb.reminderMenu)
 
 
 '''Погода каждое утро'''
@@ -519,10 +541,11 @@ async def morning_weather():
 
 async def scheduler():
     try:
-        aioschedule.every().day.at("8:00").do(morning_weather)
+        for time in time_reminder:
+            aioschedule.every().day.at(time).do(morning_weather)
         while True:
             await aioschedule.run_pending()
-            await asyncio.sleep(60)
+            await asyncio.sleep(1)
     except TypeError:
         pass
 
