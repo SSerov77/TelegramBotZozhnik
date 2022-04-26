@@ -515,12 +515,12 @@ async def on_off_admin(call: types.CallbackQuery):
 
 @dp.message_handler()
 async def error_message(message: types.Message):
-    if ':' in message.text[0:4] and ' ' in message.text[3:5]:
-        time, np = message.text.split()
-        try:
-            time_reminder[time][chat_id] = np
-        except:
-            time_reminder[time] = {chat_id: np}
+    # if ':' in message.text[0:4] and ' ' in message.text[3:5]:
+    #     time, np = message.text.split()
+    #     try:
+    #         time_reminder[time][chat_id] = np
+    #     except:
+    #         time_reminder[time] = {chat_id: np}
     await bot.send_message(message.from_user.id, 'Я Вас не понимаю.', reply_markup=kb.reminderMenu)
 
 

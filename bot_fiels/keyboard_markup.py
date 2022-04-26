@@ -6,13 +6,13 @@ from aiogram import types
 # создаем кнопки основной клавиатуры
 btnNutrition = KeyboardButton('Правильное питание')
 btnTraining = KeyboardButton('Тренировки')
-btnNotify = KeyboardButton('Уведомления')
-btnAchievements = KeyboardButton('Ваши достижения')
+# btnNotify = KeyboardButton('Уведомления')
+# btnAchievements = KeyboardButton('Ваши достижения')
 btnOther = KeyboardButton('Другое')
 
 # создаем маркап основной клавиутры
 mainMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-mainMenu.row(btnNutrition, btnTraining).row(btnNotify, btnAchievements, btnOther)
+mainMenu.row(btnNutrition, btnTraining).row(btnOther)
 
 '''Другое меню'''
 
@@ -102,14 +102,14 @@ settingsMenuAdmin.row(btnBack)
 '''Тренировка'''
 
 # создаем кнопки для раздале тренировок
-btnStart = KeyboardButton('Начать тренировку')
+# btnStart = KeyboardButton('Начать тренировку')
 btnRandomExercise = KeyboardButton('Случайное упражнение')
 btnChoiceExercise = KeyboardButton('Выбрать упражнение')
 btnBack = KeyboardButton('Назад в "Другое"')
 
 # создаем маркап для тренировок
 exerciseMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-exerciseMenu.row(btnStart, btnRandomExercise)
+exerciseMenu.row(btnRandomExercise)
 exerciseMenu.row(btnChoiceExercise, btnBack)
 
 
