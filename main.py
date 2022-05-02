@@ -52,7 +52,6 @@ def update_data():
     global admin_user_data
     data = db_sess.query(User).all()
     for i in data:
-        tot = []
         id = i.chat_id
         name = i.name
         city = i.city
@@ -248,13 +247,16 @@ async def weather_kb(message: types.Message):
 async def command_start(message: types.Message):
     try:
         new_city = message.get_args()
-        res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()
-        res.city = new_city
-        db_sess.commit()
+        new_city = new_city.rstrip().lstrip()
+        if new_city == '':
+            await bot.send_message(message.from_user.id, 'Вы ввели некорректный город')
+        else:
+            res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()
+            res.city = new_city
+            db_sess.commit()
+            await bot.send_message(message.from_user.id, f'Ваш город был изменён на: {new_city}')
     except:
-        await bot.send_message(message.from_user.id, 'Некоректный запрос')
-    else:
-        await bot.send_message(message.from_user.id, f'Ваш город был изменён на: {new_city}')
+        await bot.send_message(message.from_user.id, 'Вы ввели некорректный город')
 
 
 '''Мотивация и Факты'''

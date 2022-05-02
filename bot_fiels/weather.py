@@ -4,6 +4,7 @@ from data import db_session
 from data.db_session import global_init
 from data_tables.users_table import User
 
+
 global_init("db/database.db")
 db_sess = db_session.create_session()
 
@@ -21,6 +22,7 @@ class Weather:
 
     def weather(self):
         try:
+            res = ''
             result = db_sess.query(User).filter(
                 User.chat_id == self.chat_id).first()  # Получаем город пользователя из БД
 
@@ -55,4 +57,6 @@ class Weather:
 
         except Exception:
             if res:
-                self.result = f'Ваш город "{result}" не найден, но там наверное тепло)'
+                self.result = f'{result} не найден, но там наверное тепло)'
+            else:
+                self.result = f'{result} не найден, но там наверное тепло)'
