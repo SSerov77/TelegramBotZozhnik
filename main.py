@@ -44,6 +44,7 @@ def register(chat_id, name):
         user.completion_notification = 'True'
         user.mailing = 'True'
         user.admin = 'False'
+        user.city = ''
         db_sess.add(user)
         db_sess.commit()
 
@@ -123,6 +124,8 @@ async def other_kb(message: types.Message):
     global menu
     menu = Food(str(message.text)).result
     user_data_dish[message.from_user.id] = 0
+    await bot.send_message(message.from_user.id, f'Найдем что-то вкусненькое?',
+                           reply_markup=types.ReplyKeyboardRemove())
     await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data_dish[message.from_user.id]]}',
                            reply_markup=get_keyboard_food())
 
@@ -134,6 +137,7 @@ async def countdown(call: types.CallbackQuery):
     try:
         await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard_food())
         user_data_dish[call.from_user.id] = user_index + 1
+
     except IndexError:
         await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard_food())
         user_data_dish[call.from_user.id] = 0
@@ -160,7 +164,8 @@ async def callbacks_confirm(call: types.CallbackQuery):
     result = Photo(menu[user_index]).photo
     result2 = Photo(menu[user_index]).photo2
     await call.message.answer_photo(photo=result)
-    await call.message.answer_photo(photo=result2)
+    await call.message.answer_photo(photo=result2, reply_markup=kb.purposeMenu)
+
     await call.answer()
 
 
@@ -184,6 +189,8 @@ async def random_exercise(message: types.Message):
 @dp.message_handler(text='Выбрать упражнение')
 async def choice_exercise(message: types.Message):
     user_data[message.from_user.id] = 0
+    await bot.send_message(message.from_user.id, 'Потренируемся!',
+                           reply_markup=types.ReplyKeyboardRemove())
     await bot.send_message(message.from_user.id, f'Упражнение: {exercises[user_data[message.from_user.id]]}',
                            reply_markup=get_keyboard_training())
 
@@ -217,6 +224,7 @@ async def confirm(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     data = exer
     await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')
+    await call.message.answer(f'Удачной тренировки!', reply_markup=kb.exerciseMenu)
     await call.answer()
 
 
@@ -535,16 +543,18 @@ async def morning_weather():
         data = db_sess.query(User).filter(User.mailing == 'True').all()
         for i in data:
             i = i.chat_id
-            # Погода реализованна в ветке master
-            await bot.send_message(*i, text="Здесь должна быть погода")
+            res = Weather(str(i)).result
+            if res:
+                await bot.send_message(i, res, reply_markup=kb.weatherMenu)
+            else:
+                await bot.send_message(i, f'Введите город, чтобы мы вам могли присылать погоду', reply_markup=kb.weatherMenu)
     except TypeError:
-        pass
+        await bot.send_message(i, f'Введите город, чтобы мы вам могли присылать погоду', reply_markup=kb.weatherMenu)
 
 
 async def scheduler():
     try:
-        for time in time_reminder:
-            aioschedule.every().day.at(time).do(morning_weather)
+        aioschedule.every().day.at("08:00").do(morning_weather)
         while True:
             await aioschedule.run_pending()
             await asyncio.sleep(1)

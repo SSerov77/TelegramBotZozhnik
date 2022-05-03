@@ -6,13 +6,13 @@ from aiogram import types
 # создаем кнопки основной клавиатуры
 btnNutrition = KeyboardButton('Правильное питание')
 btnTraining = KeyboardButton('Тренировки')
-# btnNotify = KeyboardButton('Уведомления')
-# btnAchievements = KeyboardButton('Ваши достижения')
+btnNotify = KeyboardButton('Уведомления')
+btnAchievements = KeyboardButton('Мои достижения')
 btnOther = KeyboardButton('Другое')
 
 # создаем маркап основной клавиутры
 mainMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-mainMenu.row(btnNutrition, btnTraining).row(btnOther)
+mainMenu.row(btnNutrition, btnTraining).row(btnNotify, btnOther)
 
 '''Другое меню'''
 
@@ -62,7 +62,7 @@ def get_keyboard_food():
     return keyboard
 
 
-# создаем маркап для клавиатуры правильного питания цель
+# создаем маркап для клавиатуры правильного питания
 purposeMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBack)
 
@@ -71,11 +71,9 @@ purposeMenu.row(btnSoups, btnHotter, btnFish).row(btnSalad, btnDrinks).row(btnBa
 # создаем маркап для уведомления
 notifyMenu = ReplyKeyboardMarkup(resize_keyboard=True)
 notifyMenu.row(btnBack)
-
-btnDelete = types.InlineKeyboardButton(text="Удалить уведомление", callback_data="delete_reminder")
 btnAdd = types.InlineKeyboardButton(text="Добавить уведомление", callback_data="add_reminder")
 reminderMenu = types.InlineKeyboardMarkup(row_width=1)
-reminderMenu.add(btnAdd, btnDelete)
+reminderMenu.add(btnAdd)
 
 '''Настройки'''
 
