@@ -26,7 +26,7 @@ class Weather:
                 User.chat_id == self.chat_id).first()  # Получаем город пользователя из БД
             result = str(result.city).lstrip().rstrip()  # обрабатываем город пользлвателя
             if result == '':  # проверка реузльтата города
-                self.result = 'Введите свой город'  # если нет города
+                self.result = 'Ваш город не найден или вы его не ввели'  # если нет города
             else:
                 r = requests.get(
                     f"http://api.openweathermap.org/geo/1.0/direct?q={result}&appid={WEATHER_TOKEN}"

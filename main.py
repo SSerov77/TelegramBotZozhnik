@@ -586,10 +586,39 @@ async def workout(message: types.Message):
                                'Произошла ошибка, приносим свои извинения!')
 
 
+# '''Напоминания'''
+#
+#
+# @dp.message_handler(text=['Напоминания'])  # при нажатии на НАПОМИНАНИЯ
+# async def back_to_other_kb(message: types.Message):
+#     await bot.send_message(message.from_user.id, 'Вы перешли в "Напомнить"',
+#                            reply_markup=kb.notifyMenu)  # не реализровано
+#     await bot.send_message(message.from_user.id, 'Напомнить', reply_markup=kb.reminderMenu)  # не реализровано
+#
+#
+# @dp.callback_query_handler(text='add_reminder')  # не реализовано
+# async def add_reminder(call: types.CallbackQuery):
+#     await call.message.edit_text(
+#         'Напишите, что и в какое время Вам напомнить.\n/reminder: <Напоминание>> <<время>> <')  # не реализовано
+#
+#
+# @dp.message_handler(commands=['reminder'])  # не реализовано
+# async def reminder_add(message: types.Message):  # не реализовано
+#     text = message.text[10:].split()  # не реализовано
+#     time = text[-1]  # не реализовано
+#     text = " ".join(text[:-1])  # не реализовано
+#
+#
+# async def mailing(text, time):
+#     asyncio.create_task(reminder_add(mailing(text, time)))
+#     now_time = str(datetime.datetime.now())[11:16]
+#     if time == now_time:
+#         await bot.send_message(message.from_user.id, f'Вы хотели {text}', reply_markup=kb.mainMenu)
+
+
 '''Погода каждое утро'''
 
 
-@dp.message_handler()
 async def morning_weather():  # функция рассылки погоды кажое утро
     try:
         data = db_sess.query(User).filter(
@@ -614,7 +643,7 @@ async def scheduler():  # функция отслеживания времени
             await aioschedule.run_pending()
             await asyncio.sleep(1)
     except TypeError:
-        pass
+        print(1)
 
 
 async def on_startup(dp):
@@ -624,31 +653,6 @@ async def on_startup(dp):
 if __name__ == '__main__':
     executor.start_polling(dp, on_startup=on_startup)
 
-# '''Напоминания'''
-#
-#
-# @dp.message_handler(text=['Напоминания'])  # при нажатии на НАПОМИНАНИЯ
-# async def back_to_other_kb(message: types.Message):
-#     await bot.send_message(message.from_user.id, 'Вы перешли в "Напомнить"',
-#                            reply_markup=kb.notifyMenu)  # не реализровано
-#     await bot.send_message(message.from_user.id, 'Напомнить', reply_markup=kb.reminderMenu)  # не реализровано
-#
-#
-# @dp.callback_query_handler(text='add_reminder')  # не реализовано
-# async def add_reminder(call: types.CallbackQuery):
-#     await call.message.edit_text(
-#         'Напишите, что и в какое время Вам напомнить.\n/reminder: <Напоминание>> <<время>> <')  # не реализовано
-#
-#
-# @dp.message_handler(commands=['reminder'])  # не реализовано
-# async def reminder_add(message: types.Message):  # не реализовано
-#     asyncio.create_task(reminder_add(message))  # не реализовано
-#     text = message.text[10:].split()  # не реализовано
-#     time = text[-1]  # не реализовано
-#     text = " ".join(text[:-1])  # не реализовано
-#     now_time = str(datetime.datetime.now())[11:16]  # не реализовано
-#     if now_time == time:  # не реализовано
-#         await bot.send_message(message.from_user.id, f'Вы хотели {text}', reply_markup=kb.mainMenu)  # не реализовано
 
 # @dp.message_handler(text='Начать тренировку')
 # async def workout_start(message: types.Message):

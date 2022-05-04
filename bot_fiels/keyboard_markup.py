@@ -6,7 +6,7 @@ from aiogram import types
 # создаем кнопки основной клавиатуры(меню)
 btnNutrition = KeyboardButton('Правильное питание')
 btnTraining = KeyboardButton('Тренировки')
-btnNotify = KeyboardButton('Уведомления')
+btnNotify = KeyboardButton('Напоминания')
 btnAchievements = KeyboardButton('Блокнот')
 btnOther = KeyboardButton('Другое')
 
@@ -100,7 +100,6 @@ settingsMenuAdmin.row(btnBack)
 '''Тренировка'''
 
 # создаем кнопки для раздале тренировок
-# btnStart = KeyboardButton('Начать тренировку')
 btnRandomExercise = KeyboardButton('Случайное упражнение')
 btnChoiceExercise = KeyboardButton('Выбрать упражнение')
 btnBack = KeyboardButton('Назад в "Другое"')
@@ -123,6 +122,7 @@ def get_keyboard_training():  # функция создания клавитур
 
 
 '''Редактирование пользователей'''
+
 # создаем кнопки клавиатуры
 btnBackUser = types.InlineKeyboardButton(text="<<", callback_data="back_user")
 btnNextUser = types.InlineKeyboardButton(text=">>", callback_data="next_user")
@@ -132,6 +132,7 @@ editingUsers = types.InlineKeyboardMarkup(row_width=3)
 editingUsers.add(btnBackUser, btnConfirmUser, btnNextUser)
 
 '''Выбор изменения'''
+
 # создаем кнопки для выбора изменений
 btnEditWeather = types.InlineKeyboardButton(text="Погода", callback_data="pass")
 btnEditBot = types.InlineKeyboardButton(text="Отключение бота", callback_data="disabling_bot")
