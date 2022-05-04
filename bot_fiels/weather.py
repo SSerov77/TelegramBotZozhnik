@@ -1,49 +1,47 @@
-import requests
+import requests  # импорт reqests
 from data.config import WEATHER_TOKEN  # API погоды
-from data import db_session
-from data.db_session import global_init
-from data_tables.users_table import User
-import pprint
+from data import db_session  # импорт БД
+from data.db_session import global_init  # импорт создания БД
+from data_tables.users_table import User  # импорт таблицы User из БД
 
-
-global_init("db/database.db")
-db_sess = db_session.create_session()
+global_init("db/database.db")  # подключение к БД
+db_sess = db_session.create_session()  # создание БД
 
 ''' Класс с функцией погоды'''
 
 slv = {'Clouds': 'Облачно', 'Rain': 'Идёт дождь', 'Clear': 'Ясно',
-       'Snow': 'Идёт снег', 'Mist': 'Туман'}
+       'Snow': 'Идёт снег', 'Mist': 'Туман'}  # словарь общей погоды для рассылка на русском
 
 
 class Weather:
     def __init__(self, chat_id):
         self.chat_id = chat_id  # получаем id пользователя
         self.result = ''
-        self.weather()
+        self.weather()  # вызываем функцию weather
 
-    def weather(self):
+    def weather(self):  # функция получения погоды
         try:
             res = ''
             result = db_sess.query(User).filter(
                 User.chat_id == self.chat_id).first()  # Получаем город пользователя из БД
-            result = str(result.city).lstrip().rstrip()
-            if result == '':
-                self.result = 'Введите свой город'
+            result = str(result.city).lstrip().rstrip()  # обрабатываем город пользлвателя
+            if result == '':  # проверка реузльтата города
+                self.result = 'Введите свой город'  # если нет города
             else:
                 r = requests.get(
                     f"http://api.openweathermap.org/geo/1.0/direct?q={result}&appid={WEATHER_TOKEN}"
                     # Переводим город в координаты
                 )
 
-                first_data = r.json()
+                first_data = r.json()  # получаем json файл
                 lat = first_data[0]['lat']  # Получаем координаты
-                lon = first_data[0]['lon']
+                lon = first_data[0]['lon']  # Получаем координаты
                 res = requests.get(
                     f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_TOKEN}"
-                    # Получаем информацию о погоде
+                    # Получаем информацию о погоде по городу
                 )
 
-                data = res.json()
+                data = res.json()  # получаем json файл
                 user_city = result  # город
                 main_weather = slv[data['weather'][0]['main']]  # оcновная погода
                 temp = int(data['main']['temp']) - 273  # температура
@@ -51,14 +49,10 @@ class Weather:
                 pressure = data['main']['pressure']  # давление
                 result = str(f'Погода в городе {user_city}:\n'
                              f'Сегодня: {main_weather}\n'  # выводимый результат
-                             f'Температура: {temp}C\n'
-                             f'Влажность: {humidity}%\n'
-                             f'Давление: {int(pressure) * 0.75} мм.рт.ст'
+                             f'Температура: {temp}C\n'  # температура
+                             f'Влажность: {humidity}%\n'  # давление
+                             f'Давление: {int(pressure) * 0.75} мм.рт.ст'  # перевод давления в мм.рт.ст
                              )
-                self.result = result
-
+                self.result = result  # отправляем результат
         except Exception:
-            if res:
-                self.result = f'{result} не найден, но там наверное тепло)'
-            else:
-                self.result = f'{result} не найден, но там наверное тепло)'
+            self.result = f'{result} не найден, но там наверное тепло)'  # если город не найден

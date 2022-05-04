@@ -1,9 +1,9 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton  # import aiogram
 from aiogram import types
 
 '''Основное меню'''
 
-# создаем кнопки основной клавиатуры
+# создаем кнопки основной клавиатуры(меню)
 btnNutrition = KeyboardButton('Правильное питание')
 btnTraining = KeyboardButton('Тренировки')
 btnNotify = KeyboardButton('Уведомления')
@@ -111,7 +111,7 @@ exerciseMenu.row(btnRandomExercise)
 exerciseMenu.row(btnChoiceExercise, btnBack)
 
 
-def get_keyboard_training():
+def get_keyboard_training():  # функция создания клавитуры для тренировок
     buttons = [
         types.InlineKeyboardButton(text="<<", callback_data="back"),
         types.InlineKeyboardButton(text="Подтвердить", callback_data="confirm"),
@@ -119,41 +119,49 @@ def get_keyboard_training():
     ]
     keyboard = types.InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
-    return keyboard
+    return keyboard  # возращаем клавиатуру
 
 
 '''Редактирование пользователей'''
-
+# создаем кнопки клавиатуры
 btnBackUser = types.InlineKeyboardButton(text="<<", callback_data="back_user")
 btnNextUser = types.InlineKeyboardButton(text=">>", callback_data="next_user")
 btnConfirmUser = types.InlineKeyboardButton(text="Подтвердить", callback_data="confirm_user")
+# создаем маркап
 editingUsers = types.InlineKeyboardMarkup(row_width=3)
 editingUsers.add(btnBackUser, btnConfirmUser, btnNextUser)
 
 '''Выбор изменения'''
-
+# создаем кнопки для выбора изменений
 btnEditWeather = types.InlineKeyboardButton(text="Погода", callback_data="pass")
 btnEditBot = types.InlineKeyboardButton(text="Отключение бота", callback_data="disabling_bot")
 btnEditStatus = types.InlineKeyboardButton(text="Сделать администратором", callback_data="pass")
 btnBack = types.InlineKeyboardButton(text="Назад", callback_data="back_choice_user")
+# создаем маркап
 choiceEdit = types.InlineKeyboardMarkup(row_width=2)
 choiceEdit.add(btnEditWeather, btnEditBot)
 choiceEdit.add(btnEditStatus, btnBack)
 
-'''Вклюить/выключить уведомления бота'''
+'''Включить/выключить уведомления бота'''
 
-btnChoiceOnOffDisablingBot = types.InlineKeyboardButton(text="Вкл/Выкл", callback_data="on_off_disabling_bot")
+btnChoiceOnOffDisablingBot = types.InlineKeyboardButton(text="Вкл/Выкл",
+                                                        callback_data="on_off_disabling_bot")  # создаем кнопку Включить/выключить уведомления бота
+# содаем маркап Включить/выключить уведомления бота
 on_off_disabling_bot = types.InlineKeyboardMarkup(row_width=1)
 on_off_disabling_bot.add(btnChoiceOnOffDisablingBot)
 
 '''Вклюить/выключить уведомления погоды'''
 
-btnChoiceOnOffWeather = types.InlineKeyboardButton(text="Вкл/Выкл", callback_data="on_off_weather")
+btnChoiceOnOffWeather = types.InlineKeyboardButton(text="Вкл/Выкл",
+                                                   callback_data="on_off_weather")  # создаем кнопку Включить/выключить уведомления погоды
+# создаем маркап Включить/выключить уведомления погоды
 on_off_weather = types.InlineKeyboardMarkup(row_width=1)
 on_off_weather.add(btnChoiceOnOffWeather)
 
-'''Вклюить/выключить права администратора'''
+'''Включить/выключить права администратора'''
 
-btnChoiceOnOffAdmin = types.InlineKeyboardButton(text="Вкл/Выкл", callback_data="on_off_admin")
+btnChoiceOnOffAdmin = types.InlineKeyboardButton(text="Вкл/Выкл",
+                                                 callback_data="on_off_admin")  # создаем кнопку Включить/выключить права администратора
+# создаем маркап Включить/выключить права администратора
 on_off_admin = types.InlineKeyboardMarkup(row_width=1)
 on_off_admin.add(btnChoiceOnOffAdmin)

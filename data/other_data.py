@@ -1,26 +1,29 @@
-from data import db_session
-from data.db_session import global_init
-from data_tables.other_tables import Fact, Quot
-from data_tables.training_table import Training
+from data import db_session  # import создаение сессии
+from data.db_session import global_init  # import БД
+from data_tables.other_tables import Fact, Quot  # import таблиц с фактами и мотивацией из БД
+from data_tables.training_table import Training  # import таблицы с тренировками из БД
 
-global_init("db/database.db")
-db_sess = db_session.create_session()
+'''Прочие данные используемые в фукциях'''
 
-facts = []
-data = db_sess.query(Fact)
-for i in data:
-    facts.append(i.text)
+global_init("db/database.db")  # поключение к БД
+db_sess = db_session.create_session()  # создание сессии
 
-exer = []
-data = db_sess.query(Training)
-for i in data:
-    exer.append(i.text)
+facts = []  # список фактов
+data = db_sess.query(Fact)  # получаем факты из БД
+for i in data:  # пробегаемся по фактам
+    facts.append(i.text)  # добавляем в список используемый далее
 
-quots = []
-data = db_sess.query(Quot)
-for i in data:
-    quots.append(i.text)
+exer = []  # список тренировок
+data = db_sess.query(Training)  # получаем упражнения из БД
+for i in data:  # пробегаемся по упражнениям
+    exer.append(i.text)  # добавляем в список используемый далее
 
+quots = []  # список с цитатами
+data = db_sess.query(Quot)  # получаем цитаты из БД
+for i in data:  # поробегаемся по цитатам
+    quots.append(i.text)  # добавляем в список используемый далее
+
+# текст помощи при команде /help
 help_text = 'Как пользоваться ботом?' \
             '\n❗Чтобы вызвать клавиатуру основного меню, введи команду /start' \
             '\nПосле этого выбери один из нужных тебе инструментов' \
@@ -30,6 +33,7 @@ help_text = 'Как пользоваться ботом?' \
             '\n✅В разделе "Уведомления" ты можешь записать что-то и бот тебе это пришлёт несколько раз ,чтобы ты не забыл об этом' \
             '\n✅В "Другое" ты найдешь еще много чего интересного:)'
 
+# список названий упражнений
 exercises = ['Прыжки', 'Приседание у стены', 'Отжимания от пола', 'Подъемы на стул', 'Наклон вперед из положения лежа',
              'Приседания', 'Бег, колени вверх',
              'Выпады', 'Отжимания с поворотом', 'Боковая планка', 'Обратные отжимания от стула', 'Планка']

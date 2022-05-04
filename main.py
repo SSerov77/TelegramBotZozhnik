@@ -1,106 +1,109 @@
-from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
-from aiogram.utils import executor
-
-from bot_fiels.food import Food
-from bot_fiels.keyboard_markup import get_keyboard_food, get_keyboard_training
-
-from data.config import TOKEN
-from bot_fiels import keyboard_markup as kb
-from random import choice
-from bot_fiels.weather import Weather
-from data import db_session
-from data.db_session import global_init
-from data.other_data import facts, quots, help_text, exercises, exer
-
-from data_tables.users_table import User
-from bot_fiels.send_photo import Photo
-
-import asyncio
+import datetime
+import time
+from random import choice  # рандом
+import asyncio  # Импорт aioshedule
 import aioschedule
 
-user_data = {}
+from aiogram import Bot, types
+from aiogram.dispatcher import Dispatcher  # Импорт aiogram
+from aiogram.utils import executor
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+from data.config import TOKEN  # импорт токена бота
 
-user_data_dish = {}
-menu = []
-time_reminder = {}
-admin_user_data = []
+from bot_fiels.keyboard_markup import get_keyboard_food, get_keyboard_training  # импорт inline клавиатур
+from bot_fiels import keyboard_markup as kb  # импорт клавиатур телеграмма
 
-global_init("db/database.db")
-db_sess = db_session.create_session()
+from data import db_session  # работа с БД
+from data.db_session import global_init  # импорт функции создания БД
+from data.other_data import facts, quots, help_text, exercises, exer  # импорт дополнительных данных
+
+from bot_fiels.weather import Weather  # импорт класса погоды
+from bot_fiels.food import Food  # импорт класса правильного питания
+from data_tables.users_table import User  # импорт таблицы юзера из БД
+from bot_fiels.send_photo import Photo  # импорт класса отправки фото
+
+bot = Bot(token=TOKEN)  # создание бота
+dp = Dispatcher(bot)  # создание диспетчер бота
+
+user_data = {}  # создание множества с тренировками
+user_data_dish = {}  # создание множества по правильному питанию
+menu = []  # создание мписка меню
+time_reminder = {}  # создание времени напоминалки
+admin_user_data = []  # создание списка данных админа
+
+global_init("db/database.db")  # подключение к БД
+db_sess = db_session.create_session()  # создание сессии БД
 
 '''Пользователь'''
 
 
-def register(chat_id, name):
-    user = User()
-    res = db_sess.query(User).filter(User.chat_id == chat_id).all()
-    if not res:
-        user.name = name
-        user.chat_id = chat_id
-        user.completion_notification = 'True'
-        user.mailing = 'True'
-        user.admin = 'False'
-        user.city = ''
-        db_sess.add(user)
-        db_sess.commit()
+def register(chat_id, name):  # функции рекгистрации пользоваеля в БД
+    user = User()  # объявляем класс пользователя
+    res = db_sess.query(User).filter(User.chat_id == chat_id).all()  # Находим этого пользователя
+    if not res:  # проверем есть ли пользователь в БД
+        user.name = name  # вводим в БД его имя
+        user.chat_id = chat_id  # вводим в БД его id
+        user.completion_notification = 'True'  # автоматическое согласение на отпраку уведомлений
+        user.mailing = 'True'  # автоматичесмкое согласение на отправку уведомлений
+        user.admin = 'False'  # автоматическое присваивание НЕ АДМИН
+        user.city = ''  # указываем город(нет)
+        db_sess.add(user)  # добавляем данные
+        db_sess.commit()  # сохраняем даные
 
 
-def update_data():
-    global admin_user_data
-    data = db_sess.query(User).all()
-    for i in data:
-        id = i.chat_id
-        name = i.name
-        city = i.city
-        mail = i.mailing
-        comp = i.completion_notification
-        tot = [id, name, city, mail, comp]
-        admin_user_data.append(tot)
+def update_data():  # функция обновления данных пользователя
+    global admin_user_data  # объявляем глобальную переменную о данных для админа
+    data = db_sess.query(User).all()  # берем всех пользователей из БД
+    for i in data:  # пробегаемся по всем пользователям в БД
+        id = i.chat_id  # находим их id
+        name = i.name  # находим их имена
+        city = i.city  # находим их города
+        mail = i.mailing  # находим уведомления
+        comp = i.completion_notification  # находим уведмления
+        tot = [id, name, city, mail, comp]  # добавляем всё в список
+        admin_user_data.append(tot)  # добавляем в информации для админа
 
 
-@dp.message_handler(commands=['start'])
+@dp.message_handler(commands=['start'])  # функция /start (начальная команда)
 async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f'Привет {message.from_user.first_name}, если возникнут вопросы напиши /help',
-                           reply_markup=kb.mainMenu)
-    register(message.from_user.id, message.from_user.first_name)
+                           reply_markup=kb.mainMenu)  # выводим текст при вызове команды
+    register(message.from_user.id, message.from_user.first_name)  # вызываем функцию регистрации пользователя #
 
 
-@dp.message_handler(commands=['help'])
+@dp.message_handler(commands=['help'])  # функция /help
 async def command_start(message: types.Message):
     global menu
-    await bot.send_message(message.from_user.id, help_text, reply_markup=kb.mainMenu)
+    await bot.send_message(message.from_user.id, help_text,
+                           reply_markup=kb.mainMenu)  # отправляем текст помощи пользователю
 
 
-@dp.message_handler(commands=['settings'])
+@dp.message_handler(commands=['settings'])  # функция /settings
 async def command_start(message: types.Message):
-    res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()
-    if res.admin == 'True':
-        await bot.send_message(message.from_user.id, 'Вы перешли в настройки',
+    res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # находим пользователя в БД по id
+    if res.admin == 'True':  # проверка на админа
+        await bot.send_message(message.from_user.id, 'Вы перешли в настройки',  # клавиатура если админ
                                reply_markup=kb.settingsMenuAdmin)
     else:
-        await bot.send_message(message.from_user.id, 'Вы перешли в настройки',
+        await bot.send_message(message.from_user.id, 'Вы перешли в настройки',  # клавиатура если НЕ админ
                                reply_markup=kb.settingsMenu)
 
 
 '''Переключение между клавиатурами'''
 
 
-@dp.message_handler(text=['Другое'])
+@dp.message_handler(text=['Другое'])  # функция при нажатии на кнопку ДРУГОЕ
 async def other_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы перешли в "Другое"', reply_markup=kb.otherMenu)
 
 
-@dp.message_handler(text=['Назад в "Другое"'])
+@dp.message_handler(text=['Назад в "Другое"'])  # функция при нажатии на кнопку НАЗАД В ДРУГОЕ
 async def back_to_other_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы вернулись в "Другое"', reply_markup=kb.otherMenu)
 
 
-@dp.message_handler(text=['Назад в главное меню'])
+@dp.message_handler(text=['Назад в главное меню'])  # функция при нажатии на кнопку НАЗАД В ГЛАВНОЕ МЕНЮ
 async def nutrition_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы вернулись в главное меню', reply_markup=kb.mainMenu)
 
@@ -108,160 +111,168 @@ async def nutrition_kb(message: types.Message):
 '''Правильное питание'''
 
 
-@dp.message_handler(text=['Правильное питание'])
+@dp.message_handler(text=['Правильное питание'])  # кнопка ПРАВЛЬНОЕ ПИТАНИЕ
 async def main_menu_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Правильное питание', reply_markup=kb.purposeMenu)
 
 
-@dp.message_handler(text=['Назад в "Правильное питание"'])
+@dp.message_handler(text=['Назад в "Правильное питание"'])  # кнопка НАЗАД В ПРАВИЛЬНОЕ ПИТАНИЕ
 async def nutrition_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы вернусь в "Правильное питание"',
                            reply_markup=kb.purposeMenu)
 
 
-@dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])
+@dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])  # проверяем что выбрал пользователь из меню
 async def other_kb(message: types.Message):
-    global menu
-    menu = Food(str(message.text)).result
-    user_data_dish[message.from_user.id] = 0
+    global menu  # выываем глобальную переменную меню
+    menu = Food(str(message.text)).result  # получаем список блюд из выбранной категории
+    user_data_dish[message.from_user.id] = 0  # ставим 0 индекс
     await bot.send_message(message.from_user.id, f'Найдем что-то вкусненькое?',
-                           reply_markup=types.ReplyKeyboardRemove())
+                           reply_markup=types.ReplyKeyboardRemove())  # удаляем клавиатуру
     await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data_dish[message.from_user.id]]}',
-                           reply_markup=get_keyboard_food())
+                           reply_markup=get_keyboard_food())  # начинаем листать блюда (вызываем inline клавиатуру)
 
 
-@dp.callback_query_handler(text='up')
+@dp.callback_query_handler(text='up')  # если пользователь нажал ДАЛЬШЕ
 async def countdown(call: types.CallbackQuery):
     global menu
-    user_index = user_data_dish[call.from_user.id]
+    user_index = user_data_dish[call.from_user.id]  # получем id пользователя
     try:
-        await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}', reply_markup=get_keyboard_food())
+        await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}',
+                                     reply_markup=get_keyboard_food())  # меняем на следующее блюдо
         user_data_dish[call.from_user.id] = user_index + 1
-
     except IndexError:
-        await call.message.edit_text(f'Блюдо: {menu[0]}', reply_markup=get_keyboard_food())
+        await call.message.edit_text(f'Блюдо: {menu[0]}',
+                                     reply_markup=get_keyboard_food())  # если кончился список возращаемся к 0 индексу
         user_data_dish[call.from_user.id] = 0
     await call.answer()
 
 
-@dp.callback_query_handler(text='down')
+@dp.callback_query_handler(text='down')  # если пользователь нажал НАЗАД
 async def countdown(call: types.CallbackQuery):
     global menu
-    user_index = user_data_dish[call.from_user.id]
+    user_index = user_data_dish[call.from_user.id]  # получем id пользователя
     try:
-        await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}', reply_markup=get_keyboard_food())
+        await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}',
+                                     reply_markup=get_keyboard_food())  # меняем на предыдущее блюдо
         user_data_dish[call.from_user.id] = user_index - 1
     except IndexError:
         await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard_food())
-        user_data_dish[call.from_user.id] = len(menu)
+        user_data_dish[call.from_user.id] = len(menu)  # если кончился список возращаемся к последнему индексу
     await call.answer()
 
 
-@dp.callback_query_handler(text='finish')
+@dp.callback_query_handler(text='finish')  # если пользователь нажал ПОДТВЕРДИТЬ
 async def callbacks_confirm(call: types.CallbackQuery):
     global menu
-    user_index = user_data_dish[call.from_user.id]
-    result = Photo(menu[user_index]).photo
-    result2 = Photo(menu[user_index]).photo2
-    await call.message.answer_photo(photo=result)
-    await call.message.answer_photo(photo=result2, reply_markup=kb.purposeMenu)
-
+    user_index = user_data_dish[call.from_user.id]  # получаем id
+    result = Photo(menu[user_index]).photo  # получаем фото блюда
+    result2 = Photo(menu[user_index]).photo2  # получаем фото рецепта блюда
+    await call.message.answer_photo(photo=result)  # отправялем 1 фото
+    await call.message.answer_photo(photo=result2,
+                                    reply_markup=kb.purposeMenu)  # отправляем 2 фото и возращаем клавиатуру
     await call.answer()
 
 
 '''Тренировки'''
 
 
-@dp.message_handler(text='Тренировки')
+@dp.message_handler(text='Тренировки')  # функция при нажатии на кнопку ТРЕНИРОВКИ
 async def workout(message: types.Message):
     await bot.send_message(message.from_user.id,
                            'Вы перешли в раздел "Тренировки", введите команду или выберите из предложенных',
                            reply_markup=kb.exerciseMenu)
 
 
-@dp.message_handler(text='Случайное упражнение')
+@dp.message_handler(text='Случайное упражнение')  # функция СЛУЧАЙНОЕ УПРАЖЕНЕНИЕ
 async def random_exercise(message: types.Message):
-    exercise = choice(exercises)
-    data = exer
-    await bot.send_message(message.from_user.id, f'Упражнение: {exercise}\n{data[exercises.index(exercise)]}')
+    exercise = choice(exercises)  # выбираем рандомное упражнение
+    data = exer  # описание упражнения
+    await bot.send_message(message.from_user.id,
+                           f'Упражнение: {exercise}\n{data[exercises.index(exercise)]}')  # отрпавляем его
 
 
-@dp.message_handler(text='Выбрать упражнение')
+@dp.message_handler(text='Выбрать упражнение')  # функция ВЫБОР УПРАЖНЕНИЯ
 async def choice_exercise(message: types.Message):
     user_data[message.from_user.id] = 0
     await bot.send_message(message.from_user.id, 'Потренируемся!',
-                           reply_markup=types.ReplyKeyboardRemove())
+                           reply_markup=types.ReplyKeyboardRemove())  # удаляем клавиатуру
     await bot.send_message(message.from_user.id, f'Упражнение: {exercises[user_data[message.from_user.id]]}',
-                           reply_markup=get_keyboard_training())
+                           reply_markup=get_keyboard_training())  # вызываем inline клавиатуру с тренировками
 
 
-@dp.callback_query_handler(text='back')
+@dp.callback_query_handler(text='back')  # если пользователь нажал НАЗАД
 async def back(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     try:
-        await call.message.edit_text(f'Упражнение: {exercises[user_index - 1]}', reply_markup=get_keyboard_training())
-        user_data[call.from_user.id] = user_index - 1
+        await call.message.edit_text(f'Упражнение: {exercises[user_index - 1]}',
+                                     reply_markup=get_keyboard_training())  # меняем на предыдущее упражнение
+        user_data[call.from_user.id] = user_index - 1  # меняем ндекс списка
     except IndexError:
-        await call.message.edit_text(f'Упражнение: {exercises[11]}', reply_markup=get_keyboard_training())
-        user_data[call.from_user.id] = 11
+        await call.message.edit_text(f'Упражнение: {exercises[11]}',
+                                     reply_markup=get_keyboard_training())  # если начальное значение меняем на последнее упражнение
+        user_data[call.from_user.id] = 11  # меняем на последний индекс
     await call.answer()
 
 
-@dp.callback_query_handler(text='next')
+@dp.callback_query_handler(text='next')  # если пользователь нажал ВПЕРЕД
 async def callbacks_next(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     try:
-        await call.message.edit_text(f'Упражнение: {exercises[user_index + 1]}', reply_markup=get_keyboard_training())
-        user_data[call.from_user.id] = user_index + 1
+        await call.message.edit_text(f'Упражнение: {exercises[user_index + 1]}',
+                                     reply_markup=get_keyboard_training())  # меняем на след упржнение
+        user_data[call.from_user.id] = user_index + 1  # меняем индекс списка
     except IndexError:
-        await call.message.edit_text(f'Упражнение: {exercises[0]}', reply_markup=get_keyboard_training())
-        user_data[call.from_user.id] = 0
+        await call.message.edit_text(f'Упражнение: {exercises[0]}',
+                                     reply_markup=get_keyboard_training())  # если конечное значение меняем на первое упражнение
+        user_data[call.from_user.id] = 0  # меняем на 0 индекс
     await call.answer()
 
 
-@dp.callback_query_handler(text='confirm')
+@dp.callback_query_handler(text='confirm')  # если нажал подтвердить
 async def confirm(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     data = exer
-    await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')
-    await call.message.answer(f'Удачной тренировки!', reply_markup=kb.exerciseMenu)
+    await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')  # отравляем упражнение
+    await call.message.answer(f'Удачной тренировки!', reply_markup=kb.exerciseMenu)  # возращаем клавиатуру
     await call.answer()
 
 
 '''Погода'''
 
 
-@dp.message_handler(text=['Погода'])
+@dp.message_handler(text=['Погода'])  # при нажатии на кнопку ПОГОДА
 async def weather_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Вы перешли в "Погода"', reply_markup=kb.weatherMenu)
 
 
-@dp.message_handler(text=['Узнать погоду'])
+@dp.message_handler(text=['Узнать погоду'])  # функция УЗНАТЬ ПОГОДУ
 async def weather_kb(message: types.Message):
-    res = Weather(str(message.chat.id)).result
-    if res:
-        await bot.send_message(message.from_user.id, res, reply_markup=kb.weatherMenu)
+    res = Weather(str(message.chat.id)).result  # получаем резульат погоды
+    if res:  # проверка результата
+        await bot.send_message(message.from_user.id, res, reply_markup=kb.weatherMenu)  # если результат положительный
     else:
-        await bot.send_message(message.from_user.id, f'Вы не ввели город', reply_markup=kb.weatherMenu)
+        await bot.send_message(message.from_user.id, f'Вы не ввели город',
+                               reply_markup=kb.weatherMenu)  # если результат отрицательный
 
 
-@dp.message_handler(text=['Поменять город'])
+@dp.message_handler(text=['Поменять город'])  # при нажатии на ПОМЕНЯТЬ ГОРОД
 async def weather_kb(message: types.Message):
     await bot.send_message(message.from_user.id, 'Чтобы изменить город введите "/choicecity <<Ваш город>>"',
                            reply_markup=kb.weatherMenu)
 
 
-@dp.message_handler(commands=['choicecity'])
+@dp.message_handler(commands=['choicecity'])  # функция /choicecity
 async def command_start(message: types.Message):
     try:
-        new_city = message.get_args()
-        new_city = new_city.rstrip().lstrip()
-        if new_city == '':
-            await bot.send_message(message.from_user.id, 'Вы ввели некорректный город')
+        new_city = message.get_args()  # получаем новый город
+        new_city = new_city.rstrip().lstrip()  # обрабатываем строку
+        if new_city == '':  # проверка строки (результата)
+            await bot.send_message(message.from_user.id, 'Вы ввели некорректный город')  # если результат пустой
         else:
-            res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()
-            res.city = new_city
-            db_sess.commit()
+            res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # если положительный
+            res.city = new_city  # объявляем новый город пользователя
+            db_sess.commit()  # сохранем в БД
             await bot.send_message(message.from_user.id, f'Ваш город был изменён на: {new_city}')
     except:
         await bot.send_message(message.from_user.id, 'Вы ввели некорректный город')
@@ -270,123 +281,115 @@ async def command_start(message: types.Message):
 '''Мотивация и Факты'''
 
 
-@dp.message_handler(text='Мотивация')
+@dp.message_handler(text='Мотивация')  # при нажатии на МОТИВАЦИЯ
 async def quotes(message: types.Message):
-    await bot.send_message(message.from_user.id, str(choice(quots)), reply_markup=kb.otherMenu)
+    await bot.send_message(message.from_user.id, str(choice(quots)),
+                           reply_markup=kb.otherMenu)  # отпраляем рандомную цитату
 
 
-@dp.message_handler(text='Интересные факты')
+@dp.message_handler(text='Интересные факты')  # при нажатии на ИНТРЕСНЫЕ ФАКТЫ
 async def quotes(message: types.Message):
-    await bot.send_message(message.from_user.id, str(choice(facts)), reply_markup=kb.otherMenu)
-
-
-'''Напоминания'''
-
-
-@dp.message_handler(text=['Уведомления'])
-async def back_to_other_kb(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Вы перешли в "Уведомления"', reply_markup=kb.notifyMenu)
-    await bot.send_message(message.from_user.id, 'Ваши уведомления: ', reply_markup=kb.reminderMenu)
-
-
-@dp.callback_query_handler(text='add_reminder')
-async def add_reminder(call: types.CallbackQuery):
-    await call.message.edit_text('Напишите, что и в какое время Вам напомнить.\nФормат: <<час:мин>> <<Напоминание>>')
+    await bot.send_message(message.from_user.id, str(choice(facts)),
+                           reply_markup=kb.otherMenu)  # отправляем рандомный факт
 
 
 '''Уведомления пользователей'''
 
 
-@dp.message_handler(text='Уведомление остановки бота')
+@dp.message_handler(text='Уведомление остановки бота')  # функция уведомления об останвоки бота в случае остановки
 async def notification_completion(message: types.Message):
-    btn = types.InlineKeyboardButton(text="Включить", callback_data="notification_completion_on")
-    btn1 = types.InlineKeyboardButton(text="Выключить", callback_data="notification_completion_off")
-    keyboard = types.InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn, btn1)
+    btn = types.InlineKeyboardButton(text="Включить", callback_data="notification_completion_on")  # inline кнопка вкл
+    btn1 = types.InlineKeyboardButton(text="Выключить",
+                                      callback_data="notification_completion_off")  # inline кнопка выкл
+    keyboard = types.InlineKeyboardMarkup(row_width=2)  # создаем маркап
+    keyboard.add(btn, btn1)  # создаем клавиатуру
     await bot.send_message(message.from_user.id, f'Уведомление остановки бота', reply_markup=keyboard)
 
 
-@dp.message_handler(text='Уведомления погоды')
+@dp.message_handler(text='Уведомления погоды')  # уведмоления об рассылки погоды
 async def notification_weather(message: types.Message):
-    btn = types.InlineKeyboardButton(text="Включить", callback_data="notification_weather_on")
-    btn1 = types.InlineKeyboardButton(text="Выключить", callback_data="notification_weather_off")
-    keyboard = types.InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn, btn1)
+    btn = types.InlineKeyboardButton(text="Включить", callback_data="notification_weather_on")  # inline кнопка вкл
+    btn1 = types.InlineKeyboardButton(text="Выключить", callback_data="notification_weather_off")  # inline кнопка выкл
+    keyboard = types.InlineKeyboardMarkup(row_width=2)  # создаем маркап
+    keyboard.add(btn, btn1)  # создаем клавиатуру
     await bot.send_message(message.from_user.id, f'Уведомления погоды', reply_markup=keyboard)
 
 
-@dp.message_handler(text='Уведомления пользователей')
+@dp.message_handler(text='Уведомления пользователей')  # функция для админа (вкл\выкл уведомлений пользователя)
 async def notification_weather(message: types.Message):
-    res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()
-    if res.admin == 'True':
-        update_data()
+    res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # получаем пользователя по id из БД
+    if res.admin == 'True':  # проверка на админа
+        update_data()  # вызваем функцию обновления данных
         user_data[message.from_user.id] = 0
-        await bot.send_message(message.from_user.id, f'Выберите пользователя:', reply_markup=kb.editingUsers)
+        await bot.send_message(message.from_user.id, f'Выберите пользователя:',
+                               reply_markup=kb.editingUsers)  # если админ
     else:
-        await bot.send_message(message.from_user.id, 'У вас нет прав администратора!')
+        await bot.send_message(message.from_user.id, 'У вас нет прав администратора!')  # если НЕ админ
 
 
-@dp.callback_query_handler(text='notification_completion_on')
+@dp.callback_query_handler(text='notification_completion_on')  # функция вкючения уведомлений
 async def notification_completion_on(call: types.CallbackQuery):
     await call.message.edit_text('Уведомления о завершении работы бота были включены')
-    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()
-    res.completion_notification = 'True'
-    db_sess.commit()
+    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()  # получаема юзера по id из БД
+    res.completion_notification = 'True'  # ставим True на уведомления пользователя в БД
+    db_sess.commit()  # сохраняем БД
 
 
-@dp.callback_query_handler(text='notification_completion_off')
+@dp.callback_query_handler(text='notification_completion_off')  # функция выключения уведмолений
 async def notification_completion_off(call: types.CallbackQuery):
     await call.message.edit_text('Уведомления о завершении работы бота были выключены')
-    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()
-    res.completion_notification = 'False'
-    db_sess.commit()
+    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()  # получаем юзера по id из БД
+    res.completion_notification = 'False'  # ставим False на уведомления юзера в БД
+    db_sess.commit()  # сохраянем БД
 
 
-@dp.callback_query_handler(text='notification_weather_on')
+@dp.callback_query_handler(text='notification_weather_on')  # функция включения уведомлений погоды
 async def notification_weather_on(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о погоде были включены')
-    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()
-    res.mailing = 'True'
-    db_sess.commit()
+    await call.message.edit_text('Уведомления о погоде были включены')  # менющийся текст
+    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()  # получаем юзера по id из БД
+    res.mailing = 'True'  # ставим True на уведомления юзера в БД
+    db_sess.commit()  # сохраняем БД
 
 
-@dp.callback_query_handler(text='notification_weather_off')
+@dp.callback_query_handler(text='notification_weather_off')  # функция выключения увдомлений погоды
 async def notification_weather_off(call: types.CallbackQuery):
-    await call.message.edit_text('Уведомления о погоде были выключены')
-    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()
-    res.mailing = 'False'
-    db_sess.commit()
+    await call.message.edit_text('Уведомления о погоде были выключены')  # менющийся текст
+    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()  # получаем юзера по id из БД
+    res.mailing = 'False'  # ставим False на уведомления юзера в БД
+    db_sess.commit()  # сохраняем БД
 
 
 '''Функционал Админа'''
 
 
-@dp.message_handler(commands=['stop'])
+@dp.message_handler(commands=['stop'])  # команда /stop
 async def command_start(message: types.Message):
-    res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()
-    if res.admin == 'True':
-        btn = types.InlineKeyboardButton(text="ДА!", callback_data="stop")
-        keyboard = types.InlineKeyboardMarkup(row_width=1)
-        keyboard.add(btn)
-        await bot.send_message(message.from_user.id, f'Вы действительно хотите остановить бота?', reply_markup=keyboard)
+    res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # получаем юзера из БД по id
+    if res.admin == 'True':  # проверка на админа
+        btn = types.InlineKeyboardButton(text="ДА!", callback_data="stop")  # появляется inline клавиатура
+        keyboard = types.InlineKeyboardMarkup(row_width=1)  # создаем маркап
+        keyboard.add(btn)  # добавляем клавиатуру
+        await bot.send_message(message.from_user.id, f'Вы действительно хотите остановить бота?',
+                               reply_markup=keyboard)  # уточняем действие
 
 
-@dp.callback_query_handler(text='stop')
+@dp.callback_query_handler(text='stop')  # функция stop
 async def stop(call: types.CallbackQuery):
-    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()
-    if res.admin == 'True':
-        await call.message.edit_text('Бот остановлен!')
+    res = db_sess.query(User).filter(User.chat_id == call.from_user.id).first()  # получаем юзера из БД по id
+    if res.admin == 'True':  # проверка на админа
+        await call.message.edit_text('Бот остановлен!')  # сообщение если админ
         await bot.answer_callback_query(call.id,
                                         text='Бот был принудительно остановлен!'
                                              ' Данное оповещение пришло всем пользователям.',
-                                        show_alert=True)
-        data = db_sess.query(User).filter(User.completion_notification == 'True').all()
-        for i in data:
-            i = i.chat_id
-            await bot.send_message(i, f'Бот был остановлен, извените за неудобства😔')
-        exit(0)
+                                        show_alert=True)  # уточнение остановик бота
+        data = db_sess.query(User).filter(
+            User.completion_notification == 'True').all()  # получаем юзеров из БД по включению уведомлений
+        for i in data:  # пробегаемся по всем пользователям
+            i = i.chat_id  # получаем id юзера
+            await bot.send_message(i, f'Бот был остановлен, извените за неудобства😔')  # рассылка сообщений
+        exit(0)  # завершение работы бота
     else:
-        await call.message.edit_text('У вас нет прав администратора!')
+        await call.message.edit_text('У вас нет прав администратора!')  # если НЕ админ
 
 
 @dp.callback_query_handler(text='back_choice_user')
@@ -518,43 +521,30 @@ async def on_off_weather(call: types.CallbackQuery):
     db_sess.commit()
 
 
-@dp.callback_query_handler(text='on_off_admin')
-async def on_off_admin(call: types.CallbackQuery):
-    pass
-
-
-@dp.message_handler()
-async def error_message(message: types.Message):
-    # if ':' in message.text[0:4] and ' ' in message.text[3:5]:
-    #     time, np = message.text.split()
-    #     try:
-    #         time_reminder[time][chat_id] = np
-    #     except:
-    #         time_reminder[time] = {chat_id: np}
-    await bot.send_message(message.from_user.id, 'Я Вас не понимаю.', reply_markup=kb.reminderMenu)
-
-
 '''Погода каждое утро'''
 
 
 @dp.message_handler()
-async def morning_weather():
+async def morning_weather():  # функция рассылки погоды кажое утро
     try:
-        data = db_sess.query(User).filter(User.mailing == 'True').all()
-        for i in data:
-            i = i.chat_id
-            res = Weather(str(i)).result
-            if res:
-                await bot.send_message(i, res, reply_markup=kb.weatherMenu)
+        data = db_sess.query(User).filter(
+            User.mailing == 'True').all()  # получаем всех юзеров из БД с вкл уведмолениями
+        for i in data:  # пробегаемся по всем найденым юзерам
+            i = i.chat_id  # получаем id юзера
+            res = Weather(str(i)).result  # получаем результат погоды
+            if res:  # проверка результата
+                await bot.send_message(i, res, reply_markup=kb.weatherMenu)  # присылаем погоду
             else:
-                await bot.send_message(i, f'Введите город, чтобы мы вам могли присылать погоду', reply_markup=kb.weatherMenu)
+                await bot.send_message(i, f'Введите город, чтобы мы вам могли присылать погоду',
+                                       reply_markup=kb.weatherMenu)  # если нет города
     except TypeError:
-        await bot.send_message(i, f'Введите город, чтобы мы вам могли присылать погоду', reply_markup=kb.weatherMenu)
+        await bot.send_message(i, f'Введите город, чтобы мы вам могли присылать погоду',
+                               reply_markup=kb.weatherMenu)  # при ошибке если города нет
 
 
-async def scheduler():
+async def scheduler():  # функция отслеживания времени
     try:
-        aioschedule.every().day.at("08:00").do(morning_weather)
+        aioschedule.every().day.at("08:00").do(morning_weather)  # проверка времени и срабаотываение функции
         while True:
             await aioschedule.run_pending()
             await asyncio.sleep(1)
@@ -565,6 +555,35 @@ async def scheduler():
 async def on_startup(dp):
     asyncio.create_task(scheduler())
 
+
+if __name__ == '__main__':
+    executor.start_polling(dp, on_startup=on_startup)
+
+# '''Напоминания'''
+#
+#
+# @dp.message_handler(text=['Напоминания'])  # при нажатии на НАПОМИНАНИЯ
+# async def back_to_other_kb(message: types.Message):
+#     await bot.send_message(message.from_user.id, 'Вы перешли в "Напомнить"',
+#                            reply_markup=kb.notifyMenu)  # не реализровано
+#     await bot.send_message(message.from_user.id, 'Напомнить', reply_markup=kb.reminderMenu)  # не реализровано
+#
+#
+# @dp.callback_query_handler(text='add_reminder')  # не реализовано
+# async def add_reminder(call: types.CallbackQuery):
+#     await call.message.edit_text(
+#         'Напишите, что и в какое время Вам напомнить.\n/reminder: <Напоминание>> <<время>> <')  # не реализовано
+#
+#
+# @dp.message_handler(commands=['reminder'])  # не реализовано
+# async def reminder_add(message: types.Message):  # не реализовано
+#     asyncio.create_task(reminder_add(message))  # не реализовано
+#     text = message.text[10:].split()  # не реализовано
+#     time = text[-1]  # не реализовано
+#     text = " ".join(text[:-1])  # не реализовано
+#     now_time = str(datetime.datetime.now())[11:16]  # не реализовано
+#     if now_time == time:  # не реализовано
+#         await bot.send_message(message.from_user.id, f'Вы хотели {text}', reply_markup=kb.mainMenu)  # не реализовано
 
 # @dp.message_handler(text='Начать тренировку')
 # async def workout_start(message: types.Message):
@@ -617,5 +636,17 @@ async def on_startup(dp):
 #         sleep(30)
 #     await call.answer()
 
-if __name__ == '__main__':
-    executor.start_polling(dp, on_startup=on_startup)
+# @dp.callback_query_handler(text='on_off_admin')
+# async def on_off_admin(call: types.CallbackQuery):
+#     pass
+#
+#
+# @dp.message_handler()
+# async def error_message(message: types.Message):
+#     # if ':' in message.text[0:4] and ' ' in message.text[3:5]:
+#     #     time, np = message.text.split()
+#     #     try:
+#     #         time_reminder[time][chat_id] = np
+#     #     except:
+#     #         time_reminder[time] = {chat_id: np}
+#     await bot.send_message(message.from_user.id, 'Я Вас не понимаю.', reply_markup=kb.reminderMenu)
