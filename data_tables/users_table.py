@@ -15,7 +15,9 @@ class User(SqlAlchemyBase):
     mailing = sqlalchemy.Column(sqlalchemy.String, nullable=True)  # уведомления
     completion_notification = sqlalchemy.Column(sqlalchemy.String, nullable=True)  # уведомления
     admin = sqlalchemy.Column(sqlalchemy.String, nullable=True)  # админ
+    data_text = sqlalchemy.Column(sqlalchemy.String, nullable=True)  # блокнот пользователя
 
     def __repr__(self):
-        return "<User('%s','%s', '%s', '%s', '%s', '%s')>" % (
-            self.id, self.chat_id, self.name, self.city, self.mailing, self.completion_notification)  # нармальный вывод
+        return "<User('%s','%s', '%s', '%s', '%s', '%s', %s)>" % (
+            self.id, self.chat_id, self.name, self.city, self.mailing, self.completion_notification,
+            self.data_text)  # нормальный вывод

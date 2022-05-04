@@ -521,6 +521,71 @@ async def on_off_weather(call: types.CallbackQuery):
     db_sess.commit()
 
 
+'''Блокнот'''
+
+
+@dp.message_handler(text='Блокнот')  # функция при нажатии на кнопку БЛОКНОТ
+async def workout(message: types.Message):
+    try:
+        data = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # получем данные юзера
+        if not data.data_text or data.data_text == '':  # проверка его записей
+            await bot.send_message(message.from_user.id, 'У вас нет записей!')  # если записей нет
+        else:
+            await bot.send_message(message.from_user.id, f'Ваши записи:\n{data.data_text}')  # если записи есть
+        await bot.send_message(message.from_user.id,
+                               'Введи чтобы:\nДобавить запись /add <Запись>\nУдалить запись /del <Номер записи>')
+    except Exception:
+        await bot.send_message(message.from_user.id,
+                               'Произошла ошибка, приносим свои извинения!')
+
+
+@dp.message_handler(commands='add')  # команда /add
+async def workout(message: types.Message):
+    try:
+        data = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # получем данные пользователя
+        if not data.data_text or data.data_text == '':  # проверка его записей\
+            if message.text[5:] != '':  # Проверка на пустую запись
+                data.data_text = f'{message.text[5:]}'  # получаем добавленую запись если первая и не пустая
+            else:
+                await bot.send_message(message.from_user.id,  # если пустая
+                                       'Вы добавляете пустую запись!')
+        else:
+            data.data_text += f'\n{message.text[5:]}'  # получаем добавленую запись если не первая
+        db_sess.commit()  # сохраняем БД
+        await bot.send_message(message.from_user.id, 'Запись была добавлено!')  # сообщение об успешном добавлении
+    except Exception:
+        await bot.send_message(message.from_user.id,
+                               'Произошла ошибка, приносим свои извинения!')
+
+
+@dp.message_handler(commands='del')  # команда /del
+async def workout(message: types.Message):
+    try:
+        data = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # получем данные пользователя
+        if data.data_text:
+            res = [i for i in data.data_text.split('\n')]  # получаем список всех записей
+            tot = int(message.text.split()[-1])  # получаем индекс записи, которую нужно удалить
+            if tot > 0 and tot <= len(res):  # проверяем на индекс записи
+                del res[tot - 1]  # удаляем
+                data.data_text = None  # обновляем записи пользователя
+                for i in res:  # пробегаемся по старым записям
+                    if not data.data_text:  # если запись первая
+                        data.data_text = f'{i}'
+                    else:
+                        data.data_text += f'\n{i}'  # если не первая
+                db_sess.commit()  # сохраняем
+                await bot.send_message(message.from_user.id, 'Запись была удалена!')  # сообщение об успешном удалении
+            else:
+                await bot.send_message(message.from_user.id,
+                                       'Записи с таким номером не найдено')  # сообщение об успешном удалении
+        else:
+            await bot.send_message(message.from_user.id,
+                                   'Записи с таким номером не найдено')  # сообщение об успешном удалении
+    except Exception:
+        await bot.send_message(message.from_user.id,
+                               'Произошла ошибка, приносим свои извинения!')
+
+
 '''Погода каждое утро'''
 
 

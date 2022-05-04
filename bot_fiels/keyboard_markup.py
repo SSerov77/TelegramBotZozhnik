@@ -7,12 +7,12 @@ from aiogram import types
 btnNutrition = KeyboardButton('Правильное питание')
 btnTraining = KeyboardButton('Тренировки')
 btnNotify = KeyboardButton('Уведомления')
-btnAchievements = KeyboardButton('Мои достижения')
+btnAchievements = KeyboardButton('Блокнот')
 btnOther = KeyboardButton('Другое')
 
 # создаем маркап основной клавиутры
 mainMenu = ReplyKeyboardMarkup(resize_keyboard=True)
-mainMenu.row(btnNutrition, btnTraining).row(btnNotify, btnOther)
+mainMenu.row(btnNutrition, btnTraining).row(btnNotify, btnAchievements, btnOther)
 
 '''Другое меню'''
 
@@ -165,3 +165,4 @@ btnChoiceOnOffAdmin = types.InlineKeyboardButton(text="Вкл/Выкл",
 # создаем маркап Включить/выключить права администратора
 on_off_admin = types.InlineKeyboardMarkup(row_width=1)
 on_off_admin.add(btnChoiceOnOffAdmin)
+
