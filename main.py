@@ -124,13 +124,17 @@ async def nutrition_kb(message: types.Message):
 
 @dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])  # проверяем что выбрал пользователь из меню
 async def other_kb(message: types.Message):
-    global menu  # выываем глобальную переменную меню
-    menu = Food(str(message.text)).result  # получаем список блюд из выбранной категории
-    user_data_dish[message.from_user.id] = 0  # ставим 0 индекс
-    await bot.send_message(message.from_user.id, f'Найдем что-то вкусненькое?',
-                           reply_markup=types.ReplyKeyboardRemove())  # удаляем клавиатуру
-    await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data_dish[message.from_user.id]]}',
-                           reply_markup=get_keyboard_food())  # начинаем листать блюда (вызываем inline клавиатуру)
+    try:
+        global menu  # выываем глобальную переменную меню
+        menu = Food(str(message.text)).result  # получаем список блюд из выбранной категории
+        user_data_dish[message.from_user.id] = 0  # ставим 0 индекс
+        await bot.send_message(message.from_user.id, f'Найдем что-то вкусненькое?',
+                               reply_markup=types.ReplyKeyboardRemove())  # удаляем клавиатуру
+        await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data_dish[message.from_user.id]]}',
+                               reply_markup=get_keyboard_food())  # начинаем листать блюда (вызываем inline клавиатуру)
+    except Exception:
+        await bot.send_message(message.from_user.id,
+                               'Произошла ошибка, приносим свои извинения!')
 
 
 @dp.callback_query_handler(text='up')  # если пользователь нажал ДАЛЬШЕ
@@ -248,12 +252,17 @@ async def weather_kb(message: types.Message):
 
 @dp.message_handler(text=['Узнать погоду'])  # функция УЗНАТЬ ПОГОДУ
 async def weather_kb(message: types.Message):
-    res = Weather(str(message.chat.id)).result  # получаем резульат погоды
-    if res:  # проверка результата
-        await bot.send_message(message.from_user.id, res, reply_markup=kb.weatherMenu)  # если результат положительный
-    else:
-        await bot.send_message(message.from_user.id, f'Вы не ввели город',
-                               reply_markup=kb.weatherMenu)  # если результат отрицательный
+    try:
+        res = Weather(str(message.chat.id)).result  # получаем резульат погоды
+        if res:  # проверка результата
+            await bot.send_message(message.from_user.id, res,
+                                   reply_markup=kb.weatherMenu)  # если результат положительный
+        else:
+            await bot.send_message(message.from_user.id, f'Вы не ввели город',
+                                   reply_markup=kb.weatherMenu)  # если результат отрицательный
+    except Exception:
+        await bot.send_message(message.from_user.id,
+                               'Произошла ошибка, приносим свои извинения!')
 
 
 @dp.message_handler(text=['Поменять город'])  # при нажатии на ПОМЕНЯТЬ ГОРОД
@@ -586,36 +595,6 @@ async def workout(message: types.Message):
                                'Произошла ошибка, приносим свои извинения!')
 
 
-# '''Напоминания'''
-#
-#
-# @dp.message_handler(text=['Напоминания'])  # при нажатии на НАПОМИНАНИЯ
-# async def back_to_other_kb(message: types.Message):
-#     await bot.send_message(message.from_user.id, 'Вы перешли в "Напомнить"',
-#                            reply_markup=kb.notifyMenu)  # не реализровано
-#     await bot.send_message(message.from_user.id, 'Напомнить', reply_markup=kb.reminderMenu)  # не реализровано
-#
-#
-# @dp.callback_query_handler(text='add_reminder')  # не реализовано
-# async def add_reminder(call: types.CallbackQuery):
-#     await call.message.edit_text(
-#         'Напишите, что и в какое время Вам напомнить.\n/reminder: <Напоминание>> <<время>> <')  # не реализовано
-#
-#
-# @dp.message_handler(commands=['reminder'])  # не реализовано
-# async def reminder_add(message: types.Message):  # не реализовано
-#     text = message.text[10:].split()  # не реализовано
-#     time = text[-1]  # не реализовано
-#     text = " ".join(text[:-1])  # не реализовано
-#
-#
-# async def mailing(text, time):
-#     asyncio.create_task(reminder_add(mailing(text, time)))
-#     now_time = str(datetime.datetime.now())[11:16]
-#     if time == now_time:
-#         await bot.send_message(message.from_user.id, f'Вы хотели {text}', reply_markup=kb.mainMenu)
-
-
 '''Погода каждое утро'''
 
 
@@ -652,7 +631,6 @@ async def on_startup(dp):
 
 if __name__ == '__main__':
     executor.start_polling(dp, on_startup=on_startup)
-
 
 # @dp.message_handler(text='Начать тренировку')
 # async def workout_start(message: types.Message):
