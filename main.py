@@ -621,8 +621,9 @@ async def scheduler():  # функция отслеживания времени
         while True:
             await aioschedule.run_pending()
             await asyncio.sleep(1)
-    except TypeError:
-        print(1)
+    except Exception:
+        await bot.send_message(message.from_user.id,
+                               'Произошла ошибка, приносим свои извинения!')
 
 
 async def on_startup(dp):
