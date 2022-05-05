@@ -296,7 +296,7 @@ async def quotes(message: types.Message):
                            reply_markup=kb.otherMenu)  # отпраляем рандомную цитату
 
 
-@dp.message_handler(text='Интересные факты')  # при нажатии на ИНТРЕСНЫЕ ФАКТЫ
+@dp.message_handler(text='Интересный факт')  # при нажатии на ИНТРЕСНЫЕ ФАКТЫ
 async def quotes(message: types.Message):
     await bot.send_message(message.from_user.id, str(choice(facts)),
                            reply_markup=kb.otherMenu)  # отправляем рандомный факт
@@ -555,13 +555,20 @@ async def workout(message: types.Message):
         if not data.data_text or data.data_text == '':  # проверка его записей\
             if message.text[5:] != '':  # Проверка на пустую запись
                 data.data_text = f'{message.text[5:]}'  # получаем добавленую запись если первая и не пустая
+                await bot.send_message(message.from_user.id,
+                                       'Запись была добавленa!')  # сообщение об успешном добавлении
             else:
                 await bot.send_message(message.from_user.id,  # если пустая
                                        'Вы добавляете пустую запись!')
         else:
-            data.data_text += f'\n{message.text[5:]}'  # получаем добавленую запись если не первая
+            if message.text[5:] != '':  # Проверка на пустую запись
+                data.data_text += f'\n{message.text[5:]}'  # получаем добавленую запись если первая и не пустая
+                await bot.send_message(message.from_user.id,
+                                       'Запись была добавленa!')  # сообщение об успешном добавлении
+            else:
+                await bot.send_message(message.from_user.id,  # если пустая
+                                       'Вы добавляете пустую запись!')
         db_sess.commit()  # сохраняем БД
-        await bot.send_message(message.from_user.id, 'Запись была добавлено!')  # сообщение об успешном добавлении
     except Exception:
         await bot.send_message(message.from_user.id,
                                'Произошла ошибка, приносим свои извинения!')

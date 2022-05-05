@@ -17,7 +17,7 @@ mainMenu.row(btnNutrition, btnTraining).row(btnAchievements, btnOther)
 
 # создаем кнопки дургой клавиатуры
 btnWeather = KeyboardButton('Погода')
-btnFacts = KeyboardButton('Интересные факты')
+btnFacts = KeyboardButton('Интересный факт')
 btnMotivation = KeyboardButton('Мотивация')
 btnBack = KeyboardButton('Назад в главное меню')
 
@@ -164,4 +164,3 @@ btnChoiceOnOffAdmin = types.InlineKeyboardButton(text="Вкл/Выкл",
 # создаем маркап Включить/выключить права администратора
 on_off_admin = types.InlineKeyboardMarkup(row_width=1)
 on_off_admin.add(btnChoiceOnOffAdmin)
-
