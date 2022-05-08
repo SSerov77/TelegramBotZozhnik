@@ -27,7 +27,7 @@ dp = Dispatcher(bot)  # создание диспетчер бота
 
 user_data = {}  # создание множества с тренировками
 user_data_dish = {}  # создание множества по правильному питанию
-menu = []  # создание мписка меню
+menu = {}  # создание мписка меню
 time_reminder = {}  # создание времени напоминалки
 admin_user_data = []  # создание списка данных админа
 
@@ -74,7 +74,6 @@ async def command_start(message: types.Message):
 
 @dp.message_handler(commands=['help'])  # функция /help
 async def command_start(message: types.Message):
-    global menu
     await bot.send_message(message.from_user.id, help_text,
                            reply_markup=kb.mainMenu)  # отправляем текст помощи пользователю
 
@@ -125,12 +124,12 @@ async def nutrition_kb(message: types.Message):
 @dp.message_handler(text=['Супы', 'Салаты', 'Горячее', 'Рыба', 'Напитки'])  # проверяем что выбрал пользователь из меню
 async def other_kb(message: types.Message):
     try:
-        global menu  # выываем глобальную переменную меню
-        menu = Food(str(message.text)).result  # получаем список блюд из выбранной категории
+        global menu  # вызываем глобальную переменную меню
+        menu[message.from_user.id] = Food(str(message.text)).result  # получаем список блюд из выбранной категории
         user_data_dish[message.from_user.id] = 0  # ставим 0 индекс
         await bot.send_message(message.from_user.id, f'Найдем что-то вкусненькое?',
                                reply_markup=types.ReplyKeyboardRemove())  # удаляем клавиатуру
-        await bot.send_message(message.from_user.id, f'Блюдо: {menu[user_data_dish[message.from_user.id]]}',
+        await bot.send_message(message.from_user.id, f'Блюдо: {menu[message.from_user.id][user_data_dish[message.from_user.id]]}',
                                reply_markup=get_keyboard_food())  # начинаем листать блюда (вызываем inline клавиатуру)
     except Exception:
         await bot.send_message(message.from_user.id,
@@ -142,11 +141,12 @@ async def countdown(call: types.CallbackQuery):
     global menu
     user_index = user_data_dish[call.from_user.id]  # получем id пользователя
     try:
-        await call.message.edit_text(f'Блюдо: {menu[user_index + 1]}',
+        await call.message.edit_text(f'Блюдо: {menu[call.from_user.id][user_index + 1]}',
                                      reply_markup=get_keyboard_food())  # меняем на следующее блюдо
         user_data_dish[call.from_user.id] = user_index + 1
     except IndexError:
-        await call.message.edit_text(f'Блюдо: {menu[0]}',
+        print(menu)
+        await call.message.edit_text(f'Блюдо: {menu[call.from_user.id][0]}',
                                      reply_markup=get_keyboard_food())  # если кончился список возращаемся к 0 индексу
         user_data_dish[call.from_user.id] = 0
     await call.answer()
@@ -157,11 +157,11 @@ async def countdown(call: types.CallbackQuery):
     global menu
     user_index = user_data_dish[call.from_user.id]  # получем id пользователя
     try:
-        await call.message.edit_text(f'Блюдо: {menu[user_index - 1]}',
+        await call.message.edit_text(f'Блюдо: {menu[call.from_user.id][user_index - 1]}',
                                      reply_markup=get_keyboard_food())  # меняем на предыдущее блюдо
         user_data_dish[call.from_user.id] = user_index - 1
     except IndexError:
-        await call.message.edit_text(f'Блюдо: {menu[len(menu)]}', reply_markup=get_keyboard_food())
+        await call.message.edit_text(f'Блюдо: {menu[call.from_user.id][len(menu)]}', reply_markup=get_keyboard_food())
         user_data_dish[call.from_user.id] = len(menu)  # если кончился список возращаемся к последнему индексу
     await call.answer()
 
@@ -170,8 +170,8 @@ async def countdown(call: types.CallbackQuery):
 async def callbacks_confirm(call: types.CallbackQuery):
     global menu
     user_index = user_data_dish[call.from_user.id]  # получаем id
-    result = Photo(menu[user_index]).photo  # получаем фото блюда
-    result2 = Photo(menu[user_index]).photo2  # получаем фото рецепта блюда
+    result = Photo(menu[call.from_user.id][user_index]).photo  # получаем фото блюда
+    result2 = Photo(menu[call.from_user.id][user_index]).photo2  # получаем фото рецепта блюда
     await call.message.answer_photo(photo=result)  # отправялем 1 фото
     await call.message.answer_photo(photo=result2,
                                     reply_markup=kb.purposeMenu)  # отправляем 2 фото и возращаем клавиатуру
