@@ -132,9 +132,9 @@ editingUsers.add(btnBackUser, btnConfirmUser, btnNextUser)
 '''Выбор изменения'''
 
 # создаем кнопки для выбора изменений
-btnEditWeather = types.InlineKeyboardButton(text="Погода", callback_data="pass")
+btnEditWeather = types.InlineKeyboardButton(text="Погода", callback_data="weather")
 btnEditBot = types.InlineKeyboardButton(text="Отключение бота", callback_data="disabling_bot")
-btnEditStatus = types.InlineKeyboardButton(text="Сделать администратором", callback_data="pass")
+btnEditStatus = types.InlineKeyboardButton(text="Сделать администратором", callback_data="admin")
 btnBack = types.InlineKeyboardButton(text="Назад", callback_data="back_choice_user")
 # создаем маркап
 choiceEdit = types.InlineKeyboardMarkup(row_width=2)

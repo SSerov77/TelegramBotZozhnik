@@ -69,7 +69,7 @@ async def command_start(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f'Привет {message.from_user.first_name}, если возникнут вопросы напиши /help',
                            reply_markup=kb.mainMenu)  # выводим текст при вызове команды
-    register(message.from_user.id, message.from_user.first_name)  # вызываем функцию регистрации пользователя #
+    register(message.from_user.id, message.from_user.first_name)  # вызываем функцию регистрации пользователя
 
 
 @dp.message_handler(commands=['help'])  # функция /help
@@ -86,6 +86,7 @@ async def command_start(message: types.Message):
         await bot.send_message(message.from_user.id, 'Вы перешли в настройки',  # клавиатура если админ
                                reply_markup=kb.settingsMenuAdmin)
     else:
+        print(res.admin)
         await bot.send_message(message.from_user.id, 'Вы перешли в настройки',  # клавиатура если НЕ админ
                                reply_markup=kb.settingsMenu)
 
@@ -175,6 +176,8 @@ async def callbacks_confirm(call: types.CallbackQuery):
     await call.message.answer_photo(photo=result)  # отправялем 1 фото
     await call.message.answer_photo(photo=result2,
                                     reply_markup=kb.purposeMenu)  # отправляем 2 фото и возращаем клавиатуру
+    user_data_dish[call.from_user.id] = None
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)  # удаляем клавиатуру
     await call.answer()
 
 
@@ -240,6 +243,7 @@ async def confirm(call: types.CallbackQuery):
     await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')  # отравляем упражнение
     await call.message.answer(f'Удачной тренировки!', reply_markup=kb.exerciseMenu)  # возращаем клавиатуру
     await call.answer()
+    user_data[call.from_user.id] = None
 
 
 '''Погода'''
@@ -401,52 +405,44 @@ async def stop(call: types.CallbackQuery):
         await call.message.edit_text('У вас нет прав администратора!')  # если НЕ админ
 
 
-@dp.callback_query_handler(text='back_choice_user')
-async def back_choice_user(call: types.CallbackQuery):
-    user_index = user_data[call.from_user.id]
-    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
-                                 f'Имя: {admin_user_data[user_index][1]}\n'
-                                 f'Город: {admin_user_data[user_index][2]}\n'
-                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
-                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
-                                 reply_markup=kb.editingUsers)
-    await call.answer()
-
-
-@dp.callback_query_handler(text='disabling_bot')
+@dp.callback_query_handler(
+    text='disabling_bot')  # ф-ция редактирования администратором пользователя, столбец disabling_bot
 async def disabling_bot(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
-    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
-                                 f'Имя: {admin_user_data[user_index][1]}\n'
-                                 f'Город: {admin_user_data[user_index][2]}\n'
-                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
-                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
-                                 reply_markup=kb.on_off_disabling_bot)
-    await call.answer()
+    id = admin_user_data[user_index][0]  # получаем chat_id пользователя
+    res = db_sess.query(User).filter(User.chat_id == id).first()
+    if res.completion_notification == 'True':  # если уведомления включены, выключает
+        res.completion_notification = 'False'
+    else:
+        res.completion_notification = 'True'  # если уведомления выключены, включает
+    db_sess.commit()
+    await call.message.edit_text(f'Готово!')
 
 
-@dp.callback_query_handler(text='admin')
+@dp.callback_query_handler(text='admin')  # ф-ция редактирования администратором пользователя, столбец admin
 async def admin(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
-    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
-                                 f'Имя: {admin_user_data[user_index][1]}\n'
-                                 f'Город: {admin_user_data[user_index][2]}\n'
-                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
-                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
-                                 reply_markup=kb.on_off_admin)
-    await call.answer()
+    id = admin_user_data[user_index][0]  # получаем chat_id пользователя
+    res = db_sess.query(User).filter(User.chat_id == id).first()
+    if res.admin == 'True':  # если уведомления включены, выключает
+        res.admin = 'False'
+    else:
+        res.admin = 'True'  # если уведомления выключены, включает
+    db_sess.commit()
+    await call.message.edit_text(f'Готово!')
 
 
-@dp.callback_query_handler(text='weather')
+@dp.callback_query_handler(text='weather')  # ф-ция редактирования администратором пользователя, столбец weather
 async def weather(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
-    await call.message.edit_text(f'ID: {admin_user_data[user_index][0]}\n'
-                                 f'Имя: {admin_user_data[user_index][1]}\n'
-                                 f'Город: {admin_user_data[user_index][2]}\n'
-                                 f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
-                                 f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
-                                 reply_markup=kb.on_off_weather)
-    await call.answer()
+    id = admin_user_data[user_index][0]  # получаем chat_id пользователя
+    res = db_sess.query(User).filter(User.chat_id == id).first()
+    if res.admin == 'True':  # если уведомления включены, выключает
+        res.admin = 'False'
+    else:
+        res.admin = 'True'  # если уведомления выключены, включает
+    db_sess.commit()
+    await call.message.edit_text(f'Готово!')
 
 
 @dp.callback_query_handler(text='back_user')
@@ -458,7 +454,7 @@ async def back_user(call: types.CallbackQuery):
                                      f'Город: {admin_user_data[user_index - 1][2]}\n'
                                      f'Уведомления о погоде: {admin_user_data[user_index - 1][3]}\n'
                                      f'Уведомление о принудительной остановки бота: {admin_user_data[user_index - 1][4]}',
-                                     reply_markup=kb.editingUsers)
+                                     reply_markup=kb.editingUsers)  # выводит информацию о пользователе
         user_data[call.from_user.id] = user_index - 1
     except IndexError:
         await call.message.edit_text(f'ID: {admin_user_data[-1][0]}\n'
@@ -466,7 +462,7 @@ async def back_user(call: types.CallbackQuery):
                                      f'Город: {admin_user_data[-1][2]}\n'
                                      f'Уведомления о погоде: {admin_user_data[-1][3]}\n'
                                      f'Уведомление о принудительной остановки бота: {admin_user_data[-1][4]}'
-                                     f'', reply_markup=kb.editingUsers)
+                                     f'', reply_markup=kb.editingUsers)  # выводит информацию о пользователе
         user_data[call.from_user.id] = -1
     await call.answer()
 
@@ -480,7 +476,7 @@ async def next_user(call: types.CallbackQuery):
                                      f'Город: {admin_user_data[user_index + 1][2]}\n'
                                      f'Уведомления о погоде: {admin_user_data[user_index + 1][3]}\n'
                                      f'Уведомление о принудительной остановки бота: {admin_user_data[user_index + 1][4]}',
-                                     reply_markup=kb.editingUsers)
+                                     reply_markup=kb.editingUsers)  # выводит информацию о пользователе
         user_data[call.from_user.id] = user_index + 1
     except IndexError:
         await call.message.edit_text(f'ID: {admin_user_data[0][0]}\n'
@@ -488,7 +484,7 @@ async def next_user(call: types.CallbackQuery):
                                      f'Город: {admin_user_data[0][2]}\n'
                                      f'Уведомления о погоде: {admin_user_data[0][3]}\n'
                                      f'Уведомление о принудительной остановки бота: {admin_user_data[0][4]}',
-                                     reply_markup=kb.editingUsers)
+                                     reply_markup=kb.editingUsers)  # выводит информацию о пользователе
         user_data[call.from_user.id] = 0
     await call.answer()
 
@@ -501,33 +497,8 @@ async def confirm_user(call: types.CallbackQuery):
                                  f'Город: {admin_user_data[user_index][2]}\n'
                                  f'Уведомления о погоде: {admin_user_data[user_index][3]}\n'
                                  f'Уведомление о принудительной остановки бота: {admin_user_data[user_index][4]}',
-                                 reply_markup=kb.choiceEdit)
+                                 reply_markup=kb.choiceEdit)  # выводит информацию о пользователе
     await call.answer()
-
-
-# ф-ция реализованна в ветке master
-@dp.callback_query_handler(text='on_off_disabling_bot')
-async def on_off_disabling_bot(call: types.CallbackQuery):
-    user_index = user_data[call.from_user.id]
-    id = admin_user_data[user_index][0]
-    res = db_sess.query(User).filter(User.chat_id == id).first()
-    if res.completion_notification == 'True':
-        res.completion_notification = 'False'
-    else:
-        res.completion_notification = 'True'
-    db_sess.commit()
-
-
-@dp.callback_query_handler(text='on_off_weather')
-async def on_off_weather(call: types.CallbackQuery):
-    user_index = user_data[call.from_user.id]
-    id = admin_user_data[user_index][0]
-    res = db_sess.query(User).filter(User.chat_id == id).first()
-    if res.mailing == 'True':
-        res.mailing = 'False'
-    else:
-        res.mailing = 'True'
-    db_sess.commit()
 
 
 '''Блокнот'''
@@ -639,4 +610,3 @@ async def on_startup(dp):
 
 if __name__ == '__main__':
     executor.start_polling(dp, on_startup=on_startup)
-
