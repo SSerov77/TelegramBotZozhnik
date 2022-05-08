@@ -238,10 +238,8 @@ async def callbacks_next(call: types.CallbackQuery):
 async def confirm(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     data = exer
-    await call.message.answer(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')  # отравляем упражнение
+    await call.message.edit_text(f'Упражнение: {exercises[user_index]}\n{data[user_index]}')  # отравляем упражнение
     await call.message.answer(f'Удачной тренировки!', reply_markup=kb.exerciseMenu)  # возращаем клавиатуру
-    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)  # удаляем клавиатуру
-
     await call.answer()
 
 
