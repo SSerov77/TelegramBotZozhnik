@@ -66,10 +66,10 @@ def update_data():  # функция обновления данных поль�
 
 @dp.message_handler(commands=['start'])  # функция /start (начальная команда)
 async def command_start(message: types.Message):
-    await bot.send_message(message.from_user.id,
-                           f'Привет {message.from_user.first_name}, если возникнут вопросы напиши /help',
-                           reply_markup=kb.mainMenu)  # выводим текст при вызове команды
-    register(message.from_user.id, message.from_user.first_name)  # вызываем функцию регистрации пользователя
+        await bot.send_message(message.from_user.id,
+                               f'Привет {message.from_user.first_name}, если возникнут вопросы напиши /help',
+                               reply_markup=kb.mainMenu)  # выводим текст при вызове команды
+        register(message.from_user.id, message.from_user.first_name)  # вызываем функцию регистрации пользователя
 
 
 @dp.message_handler(commands=['help'])  # функция /help
