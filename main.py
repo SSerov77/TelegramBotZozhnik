@@ -175,6 +175,7 @@ async def callbacks_confirm(call: types.CallbackQuery):
     await call.message.answer_photo(photo=result)  # отправялем 1 фото
     await call.message.answer_photo(photo=result2,
                                     reply_markup=kb.purposeMenu)  # отправляем 2 фото и возращаем клавиатуру
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)  # удаляем клавиатуру
     await call.answer()
 
 
