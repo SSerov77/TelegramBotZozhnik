@@ -90,7 +90,7 @@ settingsMenu.row(btnBack)
 '''Дополнительные настройки администратора'''
 
 settingsMenuAdmin = ReplyKeyboardMarkup(resize_keyboard=True)
-btnNotificationUser = KeyboardButton('Уведомления пользователей')
+btnNotificationUser = KeyboardButton('Управленние пользователями')
 settingsMenuAdmin.row(btnNotificationUser)
 settingsMenuAdmin.row(btnNotificationWeather)
 settingsMenuAdmin.row(btnNotificationCompletion)
@@ -135,11 +135,10 @@ editingUsers.add(btnBackUser, btnConfirmUser, btnNextUser)
 btnEditWeather = types.InlineKeyboardButton(text="Погода", callback_data="weather")
 btnEditBot = types.InlineKeyboardButton(text="Отключение бота", callback_data="disabling_bot")
 btnEditStatus = types.InlineKeyboardButton(text="Сделать администратором", callback_data="admin")
-btnBack = types.InlineKeyboardButton(text="Назад", callback_data="back_choice_user")
 # создаем маркап
 choiceEdit = types.InlineKeyboardMarkup(row_width=2)
 choiceEdit.add(btnEditWeather, btnEditBot)
-choiceEdit.add(btnEditStatus, btnBack)
+choiceEdit.add(btnEditStatus)
 
 '''Включить/выключить уведомления бота'''
 

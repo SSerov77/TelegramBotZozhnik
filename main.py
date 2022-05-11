@@ -85,7 +85,6 @@ async def command_start(message: types.Message):
         await bot.send_message(message.from_user.id, 'Вы перешли в настройки',  # клавиатура если админ
                                reply_markup=kb.settingsMenuAdmin)
     else:
-        print(res.admin)
         await bot.send_message(message.from_user.id, 'Вы перешли в настройки',  # клавиатура если НЕ админ
                                reply_markup=kb.settingsMenu)
 
@@ -146,7 +145,6 @@ async def countdown(call: types.CallbackQuery):
                                      reply_markup=get_keyboard_food())  # меняем на следующее блюдо
         user_data_dish[call.from_user.id] = user_index + 1
     except IndexError:
-        print(menu)
         await call.message.edit_text(f'Блюдо: {menu[call.from_user.id][0]}',
                                      reply_markup=get_keyboard_food())  # если кончился список возращаемся к 0 индексу
         user_data_dish[call.from_user.id] = 0
@@ -328,7 +326,7 @@ async def notification_weather(message: types.Message):
     await bot.send_message(message.from_user.id, f'Уведомления погоды', reply_markup=keyboard)
 
 
-@dp.message_handler(text='Уведомления пользователей')  # функция для админа (вкл\выкл уведомлений пользователя)
+@dp.message_handler(text='Управленние пользователями')  # функция для админа (вкл\выкл уведомлений пользователя)
 async def notification_weather(message: types.Message):
     res = db_sess.query(User).filter(User.chat_id == message.from_user.id).first()  # получаем пользователя по id из БД
     if res.admin == 'True':  # проверка на админа
@@ -405,8 +403,7 @@ async def stop(call: types.CallbackQuery):
         await call.message.edit_text('У вас нет прав администратора!')  # если НЕ админ
 
 
-@dp.callback_query_handler(
-    text='disabling_bot')  # ф-ция редактирования администратором пользователя, столбец disabling_bot
+@dp.callback_query_handler(text='disabling_bot')  # ф-ция редактирования администратором пользователя, столбец disabling_bot
 async def disabling_bot(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     id = admin_user_data[user_index][0]  # получаем chat_id пользователя
@@ -437,10 +434,10 @@ async def weather(call: types.CallbackQuery):
     user_index = user_data[call.from_user.id]
     id = admin_user_data[user_index][0]  # получаем chat_id пользователя
     res = db_sess.query(User).filter(User.chat_id == id).first()
-    if res.admin == 'True':  # если уведомления включены, выключает
-        res.admin = 'False'
+    if res.mailing == 'True':  # если уведомления включены, выключает
+        res.mailing = 'False'
     else:
-        res.admin = 'True'  # если уведомления выключены, включает
+        res.mailing = 'True'  # если уведомления выключены, включает
     db_sess.commit()
     await call.message.edit_text(f'Готово!')
 
